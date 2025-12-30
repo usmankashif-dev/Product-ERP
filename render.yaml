@@ -9,6 +9,8 @@ services:
         value: false
       - key: APP_ENV
         value: production
+      - key: APP_URL
+        sync: false
       - key: LOG_CHANNEL
         value: stderr
 
