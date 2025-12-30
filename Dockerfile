@@ -33,7 +33,7 @@ RUN apk add --no-cache \
     autoconf \
     build-base
 
-# Install PHP extensions (only real ones)
+# Install PHP extensions (only the real ones)
 RUN docker-php-ext-install \
     pdo \
     pdo_mysql \
@@ -53,7 +53,7 @@ WORKDIR /app
 # Copy composer files first for caching
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies WITHOUT running scripts (fixes package:discover error)
+# Install PHP dependencies WITHOUT scripts to avoid package:discover error
 RUN composer install \
     --no-dev \
     --no-interaction \
@@ -87,15 +87,15 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 EXPOSE 3000
 ENV APP_ENV=production
 
-# Entrypoint
-RUN echo '#!/bin/sh\n\
+# Entrypoint (Unix line endings enforced, Alpine-safe)
+RUN printf '#!/bin/sh\n\
 php artisan key:generate --force\n\
 php artisan config:clear\n\
 php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan view:cache\n\
-# php artisan migrate --force  # optional, dangerous in production\n\
-exec supervisord -c /etc/supervisor/conf.d/supervisord.conf\n\
-' > /entrypoint.sh && chmod +x /entrypoint.sh
+# php artisan migrate --force  # optional, dangerous in prod\n\
+exec supervisord -c /etc/supervisor/conf.d/supervisord.conf\n' \
+> /entrypoint.sh && chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["sh", "/entrypoint.sh"]
