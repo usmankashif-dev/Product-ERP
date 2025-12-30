@@ -1,108 +1,36 @@
-# ================================
-# Stage 1: Build frontend assets
-# ================================
-FROM node:20-alpine AS frontend
-
+# Stage 1 - Build Frontend (Vite)
+FROM node:18 AS frontend
 WORKDIR /app
-
 COPY package*.json ./
-RUN npm ci
-
+RUN npm install
 COPY . .
 RUN npm run build
 
+# Stage 2 - Backend (Laravel + PHP + Composer)
+FROM php:8.2-fpm AS backend
 
-# ================================
-# Stage 2: PHP + Nginx + Laravel
-# ================================
-FROM php:8.2-fpm-alpine
-
-# Install system + PHP build dependencies
-RUN apk add --no-cache \
-    curl \
-    git \
-    zip \
-    unzip \
-    supervisor \
-    nginx \
-    postgresql-client \
-    mysql-client \
-    libpq-dev \
-    oniguruma-dev \
-    libxml2-dev \
-    autoconf \
-    build-base
-
-# Install PHP extensions (only the real ones)
-RUN docker-php-ext-install \
-    pdo \
-    pdo_mysql \
-    pdo_pgsql \
-    bcmath \
-    mbstring \
-    xml
-
-# PHP config
-RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/memory.ini
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git curl unzip libpq-dev libonig-dev libzip-dev zip \
+    && docker-php-ext-install pdo pdo_mysql mbstring zip
 
 # Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /app
+WORKDIR /var/www
 
-# Copy composer files first for caching
-COPY composer.json composer.lock ./
-
-# Install PHP dependencies WITHOUT scripts
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --prefer-dist \
-    --optimize-autoloader \
-    --no-scripts
-
-# Copy the rest of the app
+# Copy app files
 COPY . .
 
-# Clean up build dependencies to reduce image size
-RUN apk del --no-cache autoconf build-base
+# Copy built frontend from Stage 1
+COPY --from=frontend /app/public/dist ./public/dist
 
-# Copy frontend build
-COPY --from=frontend /app/public/build ./public/build
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# Permissions
-RUN mkdir -p storage/logs bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data /app
+# Laravel setup
+RUN php artisan config:clear && \
+    php artisan route:clear && \
+    php artisan view:clear
 
-# Supervisor log folder fix
-RUN mkdir -p /var/log/supervisor \
-    && touch /var/log/supervisor/supervisord.log \
-    && chown -R www-data:www-data /var/log/supervisor
-
-# Nginx config
-RUN mkdir -p /etc/nginx/conf.d
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Supervisor config
-RUN mkdir -p /etc/supervisor/conf.d
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Expose port
-EXPOSE 3000
-ENV APP_ENV=production
-
-# Entrypoint (Alpine-safe, Unix line endings)
-RUN printf '#!/bin/sh\n\
-mkdir -p /var/log/supervisor\n\
-touch /var/log/supervisor/supervisord.log\n\
-php artisan key:generate --force\n\
-php artisan config:clear\n\
-php artisan config:cache\n\
-php artisan route:cache\n\
-php artisan view:cache\n\
-# php artisan migrate --force  # optional, dangerous in prod\n\
-exec supervisord -c /etc/supervisor/conf.d/supervisord.conf\n' \
-> /entrypoint.sh && chmod +x /entrypoint.sh
-
-ENTRYPOINT ["sh", "/entrypoint.sh"]
+CMD ["php-fpm"]
