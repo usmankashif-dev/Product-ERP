@@ -44,9 +44,10 @@ RUN cp .env.example .env && \
 
 # Create required directories and set permissions for www-data user
 RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views && \
-    mkdir -p bootstrap/cache && \
-    chown -R www-data:www-data storage bootstrap/cache && \
-    chmod -R 775 storage bootstrap/cache
+    mkdir -p bootstrap/cache database && \
+    touch database/database.sqlite && \
+    chown -R www-data:www-data storage bootstrap/cache database && \
+    chmod -R 775 storage bootstrap/cache database
 
 # Copy supervisord and nginx configs
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
