@@ -33,13 +33,30 @@ COPY . .
 # Copy built frontend
 COPY --from=frontend /app/public/build ./public/build
 
+# Create .env file from .env.example
+RUN cp .env.example .env && \
+    php artisan key:generate --force
+
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Laravel cache
-RUN php artisan config:clear && \
-    php artisan route:clear && \
-    php artisan view:clear
+# Create required directories
+RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions && \
+    chmod -R 775 storage bootstrap/cache
+
+# Copy supervisord and nginx configs
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/nginx.conf /etc/nginx/sites-available/default
+RUN mkdir -p /var/log/nginx /var/log/supervisor && \
+    chmod 755 /var/log/nginx /var/log/supervisor
+
+# Install nginx and supervisor
+RUN apt-get update && apt-get install -y nginx supervisor && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy start script
+COPY docker/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
 
 # Entrypoint
-CMD ["php-fpm"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
