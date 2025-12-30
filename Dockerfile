@@ -53,7 +53,7 @@ WORKDIR /app
 # Copy composer files first for caching
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies WITHOUT scripts to avoid package:discover error
+# Install PHP dependencies WITHOUT scripts
 RUN composer install \
     --no-dev \
     --no-interaction \
@@ -71,9 +71,14 @@ RUN apk del --no-cache autoconf build-base
 COPY --from=frontend /app/public/build ./public/build
 
 # Permissions
-RUN mkdir -p storage/logs \
+RUN mkdir -p storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data /app
+
+# Supervisor log folder fix
+RUN mkdir -p /var/log/supervisor \
+    && touch /var/log/supervisor/supervisord.log \
+    && chown -R www-data:www-data /var/log/supervisor
 
 # Nginx config
 RUN mkdir -p /etc/nginx/conf.d
@@ -87,8 +92,10 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 EXPOSE 3000
 ENV APP_ENV=production
 
-# Entrypoint (Unix line endings enforced, Alpine-safe)
+# Entrypoint (Alpine-safe, Unix line endings)
 RUN printf '#!/bin/sh\n\
+mkdir -p /var/log/supervisor\n\
+touch /var/log/supervisor/supervisord.log\n\
 php artisan key:generate --force\n\
 php artisan config:clear\n\
 php artisan config:cache\n\
