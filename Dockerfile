@@ -20,7 +20,9 @@ FROM php:8.2-fpm
 # Install system deps
 RUN apt-get update && apt-get install -y \
     git curl unzip libpq-dev libonig-dev libzip-dev zip \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip
+    nginx supervisor \
+    && docker-php-ext-install pdo pdo_mysql mbstring zip \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -49,10 +51,6 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 RUN mkdir -p /var/log/nginx /var/log/supervisor && \
     chmod 755 /var/log/nginx /var/log/supervisor
-
-# Install nginx and supervisor
-RUN apt-get update && apt-get install -y nginx supervisor && \
-    rm -rf /var/lib/apt/lists/*
 
 # Copy start script
 COPY docker/start.sh /usr/local/bin/start.sh
