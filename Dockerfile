@@ -52,15 +52,9 @@ RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions sto
 # Copy supervisord and nginx configs
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/nginx.conf /etc/nginx/sites-available/default
+COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN mkdir -p /var/log/nginx /var/log/supervisor && \
-    chmod 755 /var/log/nginx /var/log/supervisor
-
-# Copy start script
-COPY docker/start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
-
-# Create entrypoint script that sets APP_URL and clears caches
-RUN echo '#!/bin/bash\nset -e\necho "Setting up Laravel environment..."\nif [ -z "$APP_URL" ]; then\n  export APP_URL="https://product-erp-1.onrender.com"\nfi\nsed -i "s|APP_URL=.*|APP_URL=$APP_URL|" /var/www/.env\necho "APP_URL set to: $APP_URL"\necho "Clearing Laravel caches..."\nphp /var/www/artisan config:clear\nphp /var/www/artisan view:clear\nphp /var/www/artisan route:clear\necho "Running database migrations..."\nphp /var/www/artisan migrate --force\necho "Starting supervisord..."\n/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' > /usr/local/bin/docker-entrypoint.sh && \
+    chmod 755 /var/log/nginx /var/log/supervisor && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Entrypoint
