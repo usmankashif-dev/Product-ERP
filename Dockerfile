@@ -42,8 +42,10 @@ RUN composer install --no-dev --optimize-autoloader
 RUN cp .env.example .env && \
     php artisan key:generate --force
 
-# Create required directories
-RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions && \
+# Create required directories and set permissions for www-data user
+RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views && \
+    mkdir -p bootstrap/cache && \
+    chown -R www-data:www-data storage bootstrap/cache && \
     chmod -R 775 storage bootstrap/cache
 
 # Copy supervisord and nginx configs
