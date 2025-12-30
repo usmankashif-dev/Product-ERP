@@ -157,6 +157,7 @@ export default function SalesHistory({ sales }) {
                                             <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Price Per Unit</th>
                                             <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Total Amount</th>
                                             <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Payment Method</th>
+                                            <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Platform</th>
                                             <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Type</th>
                                         </tr>
                                     </thead>
@@ -197,6 +198,11 @@ export default function SalesHistory({ sales }) {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
                                                         {sale.payment_method ? sale.payment_method.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'N/A'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                                                        {sale.platform ? sale.platform.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'N/A'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">

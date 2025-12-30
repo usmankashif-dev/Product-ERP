@@ -30,6 +30,8 @@ class SalesHistoryController extends Controller
                     'price_per_unit' => $sale->price_per_unit,
                     'total_amount' => $sale->total_amount,
                     'date' => $sale->date,
+                    'payment_method' => $sale->payment_method,
+                    'platform' => $sale->platform,
                     'created_at' => $sale->created_at,
                 ];
             });

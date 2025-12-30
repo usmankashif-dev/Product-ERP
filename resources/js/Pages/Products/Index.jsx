@@ -19,13 +19,17 @@ export default function Index({ products, filters, locations: initialLocations =
     const [inlineNewLocationName, setInlineNewLocationName] = useState('');
     
     const [showSellModal, setShowSellModal] = useState(false);
+    const [showDamagedModal, setShowDamagedModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [showCustomPlatform, setShowCustomPlatform] = useState(false);
+    const [damagedAmount, setDamagedAmount] = useState('');
     const [sellData, setSellData] = useState({
         quantity: '',
         price_per_unit: '',
         total_amount: '',
         date: new Date().toISOString().split('T')[0],
         payment_method: 'cash',
+        platform: '',
     });
     const [sellError, setSellError] = useState('');
     const [isSelling, setIsSelling] = useState(false);
@@ -111,7 +115,52 @@ export default function Index({ products, filters, locations: initialLocations =
     const closeSellModal = () => {
         setShowSellModal(false);
         setSelectedProduct(null);
+        setShowCustomPlatform(false);
+        setSellData({
+            quantity: '',
+            price_per_unit: '',
+            total_amount: '',
+            date: new Date().toISOString().split('T')[0],
+            payment_method: 'cash',
+            platform: '',
+        });
         setSellError('');
+    };
+
+    const openDamagedModal = (product) => {
+        setSelectedProduct(product);
+        setDamagedAmount('');
+        setShowDamagedModal(true);
+    };
+
+    const closeDamagedModal = () => {
+        setShowDamagedModal(false);
+        setSelectedProduct(null);
+        setDamagedAmount('');
+    };
+
+    const handleMarkDamaged = () => {
+        if (!damagedAmount || parseInt(damagedAmount) <= 0) {
+            alert('Please enter a valid damaged amount');
+            return;
+        }
+        
+        if (parseInt(damagedAmount) > selectedProduct.quantity) {
+            alert(`Cannot mark ${damagedAmount} as damaged. Available: ${selectedProduct.quantity}`);
+            return;
+        }
+
+        router.post(`/products/${selectedProduct.id}/mark-damaged`, {
+            damaged_amount: parseInt(damagedAmount),
+        }, {
+            onSuccess: () => {
+                closeDamagedModal();
+                window.location.reload();
+            },
+            onError: (errors) => {
+                alert(Object.values(errors).flat().join(', '));
+            }
+        });
     };
 
     const handleSellSubmit = () => {
@@ -147,6 +196,7 @@ export default function Index({ products, filters, locations: initialLocations =
             total_amount: parseFloat(sellData.total_amount),
             date: sellData.date,
             payment_method: sellData.payment_method,
+            platform: sellData.platform,
         }, {
             onSuccess: () => {
                 setIsSelling(false);
@@ -504,6 +554,15 @@ export default function Index({ products, filters, locations: initialLocations =
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                         </svg>
                                                     </button>
+                                                    <button 
+                                                        onClick={() => openDamagedModal(product)}
+                                                        className="text-red-600 hover:text-red-900 transition-colors"
+                                                        title="Mark as Damaged"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0v2m-2-2h4m-11-7h18M5 11h14V7H5v4zm0 6h14v-4H5v4z" />
+                                                        </svg>
+                                                    </button>
                                                     <Link href={`/reservations/create?product_id=${product.id}`} className="text-green-600 hover:text-green-900 transition-colors" title="Create Reservation">
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -546,9 +605,9 @@ export default function Index({ products, filters, locations: initialLocations =
             {/* Sell Modal */}
             {showSellModal && selectedProduct && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-lg max-w-md w-full">
+                    <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
-                        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+                        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 sticky top-0">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h2 className="text-lg font-semibold text-gray-900">Sell Product</h2>
@@ -566,7 +625,7 @@ export default function Index({ products, filters, locations: initialLocations =
                         </div>
 
                         {/* Modal Body */}
-                        <div className="px-6 py-4 space-y-4">
+                        <div className="px-6 py-4 space-y-3">
                             {/* Stock Info */}
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
                                 <p className="text-sm text-gray-600">Available Stock:</p>
@@ -590,83 +649,131 @@ export default function Index({ products, filters, locations: initialLocations =
                                 </div>
                             )}
 
-                            {/* Quantity Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Quantity <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max={getAvailableQuantity(selectedProduct.id)}
-                                    value={sellData.quantity}
-                                    onChange={(e) => setSellData({ ...sellData, quantity: e.target.value })}
-                                    placeholder="Enter quantity"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                />
-                            </div>
+                            {/* Two Column Grid */}
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* Quantity Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Quantity <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max={getAvailableQuantity(selectedProduct.id)}
+                                        value={sellData.quantity}
+                                        onChange={(e) => setSellData({ ...sellData, quantity: e.target.value })}
+                                        placeholder="Enter quantity"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                    />
+                                </div>
 
-                            {/* Date Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Date <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="date"
-                                    value={sellData.date}
-                                    onChange={(e) => setSellData({ ...sellData, date: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                />
-                            </div>
+                                {/* Date Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Date <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={sellData.date}
+                                        onChange={(e) => setSellData({ ...sellData, date: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                    />
+                                </div>
 
-                            {/* Price Per Unit Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Price Per Unit <span className="text-gray-400">(Optional)</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={sellData.price_per_unit}
-                                    onChange={(e) => setSellData({ ...sellData, price_per_unit: e.target.value })}
-                                    placeholder="Enter price per unit"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                />
-                            </div>
+                                {/* Price Per Unit Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Price/Unit <span className="text-gray-400">(Opt.)</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={sellData.price_per_unit}
+                                        onChange={(e) => setSellData({ ...sellData, price_per_unit: e.target.value })}
+                                        placeholder="Price"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                    />
+                                </div>
 
-                            {/* Total Amount Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Total Amount <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={sellData.total_amount}
-                                    onChange={(e) => setSellData({ ...sellData, total_amount: e.target.value })}
-                                    placeholder="Enter total amount"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                />
-                            </div>
+                                {/* Total Amount Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Total Amount <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={sellData.total_amount}
+                                        onChange={(e) => setSellData({ ...sellData, total_amount: e.target.value })}
+                                        placeholder="Total"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                    />
+                                </div>
 
-                            {/* Payment Method Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Payment Method <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    value={sellData.payment_method}
-                                    onChange={(e) => setSellData({ ...sellData, payment_method: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                >
-                                    <option value="cash">Cash</option>
-                                    <option value="credit_card">Credit Card</option>
-                                    <option value="debit_card">Debit Card</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="check">Check</option>
-                                </select>
+                                {/* Payment Method Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Payment Method <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        value={sellData.payment_method}
+                                        onChange={(e) => setSellData({ ...sellData, payment_method: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                    >
+                                        <option value="cash">Cash</option>
+                                        <option value="credit_card">Credit Card</option>
+                                        <option value="debit_card">Debit Card</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="check">Check</option>
+                                    </select>
+                                </div>
+
+                                {/* Platform Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Platform <span className="text-red-500">*</span>
+                                    </label>
+                                    {!showCustomPlatform ? (
+                                        <select
+                                            value={sellData.platform}
+                                            onChange={(e) => {
+                                                if (e.target.value === 'custom') {
+                                                    setShowCustomPlatform(true);
+                                                    setSellData({ ...sellData, platform: '' });
+                                                } else {
+                                                    setSellData({ ...sellData, platform: e.target.value });
+                                                }
+                                            }}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                        >
+                                            <option value="">Select</option>
+                                            <option value="daraz">Daraz</option>
+                                            <option value="amazon">Amazon</option>
+                                            <option value="website">Website</option>
+                                            <option value="direct_sale">Direct Sale</option>
+                                            <option value="custom">+ Custom</option>
+                                        </select>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={sellData.platform}
+                                                onChange={(e) => setSellData({ ...sellData, platform: e.target.value })}
+                                                placeholder="Platform"
+                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                                autoFocus
+                                            />
+                                            <button
+                                                onClick={() => setShowCustomPlatform(false)}
+                                                className="px-2 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition-colors text-sm"
+                                            >
+                                                ✓
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -690,6 +797,73 @@ export default function Index({ products, filters, locations: initialLocations =
                                     </svg>
                                 )}
                                 <span>{isSelling ? 'Saving...' : 'Save Sale'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Damaged Modal */}
+            {showDamagedModal && selectedProduct && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-lg max-w-md w-full">
+                        {/* Modal Header */}
+                        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-red-50 to-orange-50">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-lg font-semibold text-gray-900">Mark as Damaged</h2>
+                                    <p className="text-sm text-gray-600 mt-1">{selectedProduct.name}</p>
+                                </div>
+                                <button
+                                    onClick={closeDamagedModal}
+                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="px-6 py-4 space-y-4">
+                            {/* Stock Info */}
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                <p className="text-sm text-gray-600">Current Stock:</p>
+                                <p className="text-lg font-semibold text-orange-900">{selectedProduct.quantity} units</p>
+                            </div>
+
+                            {/* Damaged Amount Input */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Damaged Amount (units) <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max={selectedProduct.quantity}
+                                    value={damagedAmount}
+                                    onChange={(e) => setDamagedAmount(e.target.value)}
+                                    placeholder="Enter number of damaged units"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                                    autoFocus
+                                />
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl flex space-x-3 justify-end">
+                            <button
+                                onClick={closeDamagedModal}
+                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleMarkDamaged}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                            >
+                                Mark Damaged
                             </button>
                         </div>
                     </div>

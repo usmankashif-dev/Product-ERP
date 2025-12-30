@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: erp-app
+    runtime: docker
+    plan: starter
+    healthCheckPath: /
+    envVars:
+      - key: APP_DEBUG
+        value: false
+      - key: APP_ENV
+        value: production
+      - key: LOG_CHANNEL
+        value: stderr
+
+databases:
+  - name: erp-db
+    databaseName: erp_production
+    user: postgres
+    plan: starter
+    ipAllowList: []

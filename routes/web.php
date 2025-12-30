@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SalesHistoryController;
+use App\Http\Controllers\DamageController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -32,10 +33,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales-history', [SalesHistoryController::class, 'index'])->name('sales-history.index');
     Route::resource('products', ProductController::class);
     Route::patch('/products/{product}/location', [ProductController::class, 'updateLocation'])->name('products.updateLocation');
+    Route::post('/products/{product}/mark-damaged', [DamageController::class, 'markProductDamaged'])->name('products.markDamaged');
     Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
     Route::resource('reservations', ReservationController::class);
     Route::patch('/reservations/{reservation}/location', [ReservationController::class, 'updateLocation'])->name('reservations.updateLocation');
     Route::patch('/reservations/{reservation}/status', [ReservationController::class, 'updateStatus'])->name('reservations.updateStatus');
+    Route::post('/reservations/{reservation}/mark-damaged', [DamageController::class, 'markReservationDamaged'])->name('reservations.markDamaged');
     Route::patch('/api/reservations/{reservation}/quantity', [ReservationController::class, 'updateQuantity'])->name('reservations.updateQuantity');
 });
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Index({ reservations, filters }) {
+export default function Index({ reservations, filters, locations = [] }) {
     const { data, setData, get } = useForm({
         product: filters.product || '',
         client: filters.client || '',
@@ -12,14 +12,18 @@ export default function Index({ reservations, filters }) {
 
     const [editingStatus, setEditingStatus] = useState(null);
     const [statusValue, setStatusValue] = useState('');
+    const [editingLocation, setEditingLocation] = useState(null);
+    const [locationValue, setLocationValue] = useState('');
     const [showSellModal, setShowSellModal] = useState(false);
     const [selectedReservation, setSelectedReservation] = useState(null);
+    const [showCustomPlatform, setShowCustomPlatform] = useState(false);
     const [sellData, setSellData] = useState({
         quantity: '',
         price_per_unit: '',
         total_amount: '',
         date: new Date().toISOString().split('T')[0],
         payment_method: 'cash',
+        platform: '',
     });
     const [sellError, setSellError] = useState('');
     const [isSelling, setIsSelling] = useState(false);
@@ -64,6 +68,31 @@ export default function Index({ reservations, filters }) {
         setStatusValue('');
     };
 
+    const startLocationEdit = (reservation) => {
+        setEditingLocation(reservation.id);
+        setLocationValue(reservation.location);
+    };
+
+    const saveLocation = (reservationId) => {
+        router.patch(`/reservations/${reservationId}/location`, {
+            location: locationValue
+        }, {
+            preserveState: true,
+            onSuccess: () => {
+                setEditingLocation(null);
+                setLocationValue('');
+            },
+            onError: () => {
+                // Handle error if needed
+            }
+        });
+    };
+
+    const cancelLocationEdit = () => {
+        setEditingLocation(null);
+        setLocationValue('');
+    };
+
     const openSellModal = (reservation) => {
         setSelectedReservation(reservation);
         setSellData({
@@ -80,6 +109,15 @@ export default function Index({ reservations, filters }) {
     const closeSellModal = () => {
         setShowSellModal(false);
         setSelectedReservation(null);
+        setShowCustomPlatform(false);
+        setSellData({
+            quantity: '',
+            price_per_unit: '',
+            total_amount: '',
+            date: new Date().toISOString().split('T')[0],
+            payment_method: 'cash',
+            platform: '',
+        });
         setSellError('');
     };
 
@@ -112,6 +150,8 @@ export default function Index({ reservations, filters }) {
             price_per_unit: sellData.price_per_unit ? parseFloat(sellData.price_per_unit) : null,
             total_amount: parseFloat(sellData.total_amount),
             date: sellData.date,
+            payment_method: sellData.payment_method,
+            platform: sellData.platform,
         }, {
             onSuccess: () => {
                 setIsSelling(false);
@@ -305,6 +345,7 @@ export default function Index({ reservations, filters }) {
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -330,6 +371,50 @@ export default function Index({ reservations, filters }) {
                                                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
                                                         {reservation.size || 'N/A'}
                                                     </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {editingLocation === reservation.id ? (
+                                                        <div className="flex gap-2 items-center">
+                                                            <select
+                                                                value={locationValue}
+                                                                onChange={(e) => setLocationValue(e.target.value)}
+                                                                className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                                                autoFocus
+                                                            >
+                                                                <option value="">Select location</option>
+                                                                {locations.map((loc) => (
+                                                                    <option key={loc} value={loc}>
+                                                                        {loc.charAt(0).toUpperCase() + loc.slice(1)}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                            <button
+                                                                onClick={() => saveLocation(reservation.id)}
+                                                                className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-2 rounded transition-colors"
+                                                            >
+                                                                ✓
+                                                            </button>
+                                                            <button
+                                                                onClick={cancelLocationEdit}
+                                                                className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1 px-2 rounded transition-colors"
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span
+                                                            onClick={() => startLocationEdit(reservation)}
+                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all hover:shadow-md ${
+                                                                reservation.location === 'warehouse' ? 'bg-orange-100 text-orange-800' :
+                                                                reservation.location === 'shop' ? 'bg-green-100 text-green-800' :
+                                                                'bg-blue-100 text-blue-800'
+                                                            }`}>
+                                                            {reservation.location === 'warehouse' && '🏭 '}
+                                                            {reservation.location === 'shop' && '🏪 '}
+                                                            {reservation.location === 'other' && '📍 '}
+                                                            {reservation.location ? reservation.location.charAt(0).toUpperCase() + reservation.location.slice(1) : 'N/A'}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     {editingStatus === reservation.id ? (
@@ -422,12 +507,12 @@ export default function Index({ reservations, filters }) {
             {/* Sell Modal */}
             {showSellModal && selectedReservation && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-lg max-w-md w-full">
+                    <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
-                        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+                        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 sticky top-0">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-lg font-semibold text-gray-900">Convert Reservation to Sale</h2>
+                                    <h2 className="text-lg font-semibold text-gray-900">Convert to Sale</h2>
                                     <p className="text-sm text-gray-600 mt-1">{selectedReservation.product.name}</p>
                                 </div>
                                 <button
@@ -442,7 +527,7 @@ export default function Index({ reservations, filters }) {
                         </div>
 
                         {/* Modal Body */}
-                        <div className="px-6 py-4 space-y-4">
+                        <div className="px-6 py-4 space-y-3">
                             {/* Reservation Info */}
                             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                                 <p className="text-sm text-gray-600">Reservation Details:</p>
@@ -457,83 +542,131 @@ export default function Index({ reservations, filters }) {
                                 </div>
                             )}
 
-                            {/* Quantity Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Quantity <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max={selectedReservation.quantity}
-                                    value={sellData.quantity}
-                                    onChange={(e) => setSellData({ ...sellData, quantity: e.target.value })}
-                                    placeholder="Enter quantity"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-                                />
-                            </div>
+                            {/* Two Column Grid */}
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* Quantity Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Quantity <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max={selectedReservation.quantity}
+                                        value={sellData.quantity}
+                                        onChange={(e) => setSellData({ ...sellData, quantity: e.target.value })}
+                                        placeholder="Qty"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                    />
+                                </div>
 
-                            {/* Date Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Date <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="date"
-                                    value={sellData.date}
-                                    onChange={(e) => setSellData({ ...sellData, date: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-                                />
-                            </div>
+                                {/* Date Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Date <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={sellData.date}
+                                        onChange={(e) => setSellData({ ...sellData, date: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                    />
+                                </div>
 
-                            {/* Price Per Unit Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Price Per Unit <span className="text-gray-400">(Optional)</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={sellData.price_per_unit}
-                                    onChange={(e) => setSellData({ ...sellData, price_per_unit: e.target.value })}
-                                    placeholder="Enter price per unit"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-                                />
-                            </div>
+                                {/* Price Per Unit Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Price/Unit <span className="text-gray-400">(Opt.)</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={sellData.price_per_unit}
+                                        onChange={(e) => setSellData({ ...sellData, price_per_unit: e.target.value })}
+                                        placeholder="Price"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                    />
+                                </div>
 
-                            {/* Total Amount Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Total Amount <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={sellData.total_amount}
-                                    onChange={(e) => setSellData({ ...sellData, total_amount: e.target.value })}
-                                    placeholder="Enter total amount"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-                                />
-                            </div>
+                                {/* Total Amount Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Total Amount <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={sellData.total_amount}
+                                        onChange={(e) => setSellData({ ...sellData, total_amount: e.target.value })}
+                                        placeholder="Total"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                    />
+                                </div>
 
-                            {/* Payment Method Field */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Payment Method <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    value={sellData.payment_method}
-                                    onChange={(e) => setSellData({ ...sellData, payment_method: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-                                >
-                                    <option value="cash">Cash</option>
-                                    <option value="credit_card">Credit Card</option>
-                                    <option value="debit_card">Debit Card</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="check">Check</option>
-                                </select>
+                                {/* Payment Method Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Payment Method <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        value={sellData.payment_method}
+                                        onChange={(e) => setSellData({ ...sellData, payment_method: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                    >
+                                        <option value="cash">Cash</option>
+                                        <option value="credit_card">Credit Card</option>
+                                        <option value="debit_card">Debit Card</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="check">Check</option>
+                                    </select>
+                                </div>
+
+                                {/* Platform Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Platform <span className="text-red-500">*</span>
+                                    </label>
+                                    {!showCustomPlatform ? (
+                                        <select
+                                            value={sellData.platform}
+                                            onChange={(e) => {
+                                                if (e.target.value === 'custom') {
+                                                    setShowCustomPlatform(true);
+                                                    setSellData({ ...sellData, platform: '' });
+                                                } else {
+                                                    setSellData({ ...sellData, platform: e.target.value });
+                                                }
+                                            }}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                        >
+                                            <option value="">Select</option>
+                                            <option value="daraz">Daraz</option>
+                                            <option value="amazon">Amazon</option>
+                                            <option value="website">Website</option>
+                                            <option value="direct_sale">Direct Sale</option>
+                                            <option value="custom">+ Custom</option>
+                                        </select>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={sellData.platform}
+                                                onChange={(e) => setSellData({ ...sellData, platform: e.target.value })}
+                                                placeholder="Platform"
+                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                                autoFocus
+                                            />
+                                            <button
+                                                onClick={() => setShowCustomPlatform(false)}
+                                                className="px-2 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition-colors text-sm"
+                                            >
+                                                ✓
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 

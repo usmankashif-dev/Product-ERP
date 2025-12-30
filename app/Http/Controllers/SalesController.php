@@ -25,6 +25,7 @@ class SalesController extends Controller
             'total_amount' => 'required|numeric|min:0',
             'date' => 'required|date_format:Y-m-d',
             'payment_method' => 'nullable|in:cash,credit_card,debit_card,bank_transfer,check',
+            'platform' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -55,6 +56,7 @@ class SalesController extends Controller
                     'total_amount' => $validated['total_amount'],
                     'date' => $validated['date'],
                     'payment_method' => $validated['payment_method'] ?? null,
+                    'platform' => $validated['platform'] ?? null,
                 ];
                 Sale::create($saleData);
 

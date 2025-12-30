@@ -14,6 +14,7 @@ class Sale extends Model
         'total_amount',
         'date',
         'payment_method',
+        'platform',
     ];
 
     protected $casts = [
