@@ -33,12 +33,12 @@ COPY . .
 # Copy built frontend
 COPY --from=frontend /app/public/build ./public/build
 
+# Install PHP dependencies first (before running artisan commands)
+RUN composer install --no-dev --optimize-autoloader
+
 # Create .env file from .env.example
 RUN cp .env.example .env && \
     php artisan key:generate --force
-
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
 
 # Create required directories
 RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions && \
