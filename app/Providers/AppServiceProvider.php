@@ -31,5 +31,10 @@ class AppServiceProvider extends ServiceProvider
             Request::HEADER_X_FORWARDED_PROTO |
             Request::HEADER_X_FORWARDED_AWS_ELB
         );
+        
+        // Force HTTPS in production
+        if ($this->app->environment('production')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }

@@ -10,7 +10,7 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_URL
-        sync: false
+        value: https://product-erp-1.onrender.com
       - key: LOG_CHANNEL
         value: stderr
 
