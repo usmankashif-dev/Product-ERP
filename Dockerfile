@@ -60,7 +60,7 @@ COPY docker/start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 # Create entrypoint script
-RUN echo '#!/bin/bash\nset -e\necho "Running database migrations..."\nphp /var/www/artisan migrate --force\necho "Starting supervisord..."\n/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' > /usr/local/bin/docker-entrypoint.sh && \
+RUN echo '#!/bin/bash\nset -e\necho "Clearing Laravel caches..."\nphp /var/www/artisan config:clear\nphp /var/www/artisan view:clear\nphp /var/www/artisan route:clear\necho "Running database migrations..."\nphp /var/www/artisan migrate --force\necho "Starting supervisord..."\n/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' > /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Entrypoint
