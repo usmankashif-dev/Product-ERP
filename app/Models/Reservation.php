@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Reservation extends Model
 {
-    protected $fillable = ['product_id', 'client_id', 'quantity', 'size', 'location', 'date', 'status', 'reserved_at', 'payment_method'];
+    protected $fillable = ['product_id', 'product_name', 'client_id', 'client_name', 'client_phone', 'client_address', 'quantity', 'size', 'location', 'date', 'status', 'reserved_at', 'payment_method'];
 
     protected $casts = [
         'reserved_at' => 'datetime',

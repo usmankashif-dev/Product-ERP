@@ -77,6 +77,9 @@ class ProductController extends Controller
             'date' => 'nullable|date',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'client_name' => 'nullable|string|max:255',
+            'client_phone' => 'nullable|string|max:255',
+            'client_address' => 'nullable|string',
         ]);
 
         $data = $request->all();
@@ -130,6 +133,9 @@ class ProductController extends Controller
             'date' => 'nullable|date',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'client_name' => 'nullable|string|max:255',
+            'client_phone' => 'nullable|string|max:255',
+            'client_address' => 'nullable|string',
         ]);
 
         $data = $request->all();

@@ -38,6 +38,9 @@ export default function Index({ reservations, filters, locations = [] }) {
         date: new Date().toISOString().split('T')[0],
         payment_method: 'cash',
         platform: '',
+        customer_name: '',
+        customer_phone: '',
+        customer_address: '',
     });
     const [sellError, setSellError] = useState('');
     const [isSelling, setIsSelling] = useState(false);
@@ -109,12 +112,17 @@ export default function Index({ reservations, filters, locations = [] }) {
 
     const openSellModal = (reservation) => {
         setSelectedReservation(reservation);
+        // Auto-fill price from product if available
+        const productPrice = reservation.product?.price || '';
         setSellData({
             quantity: reservation.quantity.toString(),
-            price_per_unit: '',
+            price_per_unit: productPrice.toString(),
             total_amount: '',
             date: new Date().toISOString().split('T')[0],
             payment_method: reservation.payment_method || 'cash',
+            customer_name: '',
+            customer_phone: '',
+            customer_address: '',
         });
         setSellError('');
         setShowSellModal(true);
@@ -131,6 +139,9 @@ export default function Index({ reservations, filters, locations = [] }) {
             date: new Date().toISOString().split('T')[0],
             payment_method: 'cash',
             platform: '',
+            customer_name: '',
+            customer_phone: '',
+            customer_address: '',
         });
         setSellError('');
     };
@@ -150,6 +161,18 @@ export default function Index({ reservations, filters, locations = [] }) {
             setSellError('Date is required');
             return;
         }
+        if (!sellData.customer_name || !sellData.customer_name.trim()) {
+            setSellError('Customer name is required');
+            return;
+        }
+        if (!sellData.customer_phone || !sellData.customer_phone.trim()) {
+            setSellError('Customer phone is required');
+            return;
+        }
+        if (!sellData.customer_address || !sellData.customer_address.trim()) {
+            setSellError('Customer address is required');
+            return;
+        }
 
         const soldQty = parseInt(sellData.quantity);
         const reservedQty = selectedReservation.quantity;
@@ -158,7 +181,6 @@ export default function Index({ reservations, filters, locations = [] }) {
         
         router.post('/sales', {
             product_id: selectedReservation.product_id,
-            client_id: selectedReservation.client_id,
             reservation_id: selectedReservation.id,
             quantity: soldQty,
             price_per_unit: sellData.price_per_unit ? parseFloat(sellData.price_per_unit) : null,
@@ -166,6 +188,9 @@ export default function Index({ reservations, filters, locations = [] }) {
             date: sellData.date,
             payment_method: sellData.payment_method,
             platform: sellData.platform,
+            customer_name: sellData.customer_name,
+            customer_phone: sellData.customer_phone,
+            customer_address: sellData.customer_address,
         }, {
             onSuccess: () => {
                 setIsSelling(false);
@@ -483,8 +508,8 @@ export default function Index({ reservations, filters, locations = [] }) {
                                                     <div className="text-xs text-gray-500">ID: {reservation.product?.id || 'N/A'}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-gray-900">{reservation.client?.name || 'N/A'}</div>
-                                                    <div className="text-xs text-gray-500">{reservation.client?.phone || 'No phone'}</div>
+                                                    <div className="text-sm font-medium text-gray-900">{reservation.client_name || reservation.client?.name || 'N/A'}</div>
+                                                    <div className="text-xs text-gray-500">{reservation.client_phone || reservation.client?.phone || 'No phone'}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
@@ -659,12 +684,6 @@ export default function Index({ reservations, filters, locations = [] }) {
                                 </svg>
                                 <p className="mt-4 text-gray-600 text-lg">No reservations found</p>
                                 <p className="mt-2 text-gray-500">Create a new reservation to get started</p>
-                                <Link href="/reservations/create" className="mt-4 inline-flex items-center px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-lg transition-colors">
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                    Create Reservation
-                                </Link>
                             </div>
                         )}
                     </div>
@@ -697,7 +716,7 @@ export default function Index({ reservations, filters, locations = [] }) {
                             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                                 <p className="text-sm text-gray-600">Reservation Details:</p>
                                 <p className="text-lg font-semibold text-green-900 mt-1">{selectedReservation.quantity} units</p>
-                                <p className="text-xs text-gray-500 mt-1">Client: {selectedReservation.client.name}</p>
+                                <p className="text-xs text-gray-500 mt-1">Product: {selectedReservation.product_name || selectedReservation.product?.name || 'Product'}</p>
                             </div>
 
                             {/* Error Message */}
@@ -706,6 +725,54 @@ export default function Index({ reservations, filters, locations = [] }) {
                                     <p className="text-sm text-red-800">{sellError}</p>
                                 </div>
                             )}
+
+                            {/* Customer Information Section */}
+                            <div className="border-t pt-3">
+                                <p className="text-sm font-semibold text-gray-700 mb-3">Customer Information</p>
+                                <div className="space-y-3">
+                                    {/* Customer Name */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Name <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={sellData.customer_name}
+                                            onChange={(e) => setSellData({ ...sellData, customer_name: e.target.value })}
+                                            placeholder="Customer name"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                        />
+                                    </div>
+
+                                    {/* Customer Phone */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Phone <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={sellData.customer_phone}
+                                            onChange={(e) => setSellData({ ...sellData, customer_phone: e.target.value })}
+                                            placeholder="Phone number"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                        />
+                                    </div>
+
+                                    {/* Customer Address */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Address <span className="text-red-500">*</span>
+                                        </label>
+                                        <textarea
+                                            value={sellData.customer_address}
+                                            onChange={(e) => setSellData({ ...sellData, customer_address: e.target.value })}
+                                            placeholder="Customer address"
+                                            rows="2"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
 
                             {/* Two Column Grid */}
                             <div className="grid grid-cols-2 gap-3">
@@ -719,7 +786,12 @@ export default function Index({ reservations, filters, locations = [] }) {
                                         min="1"
                                         max={selectedReservation.quantity}
                                         value={sellData.quantity}
-                                        onChange={(e) => setSellData({ ...sellData, quantity: e.target.value })}
+                                        onChange={(e) => {
+                                            const qty = e.target.value ? parseFloat(e.target.value) : 0;
+                                            const price = sellData.price_per_unit ? parseFloat(sellData.price_per_unit) : 0;
+                                            const total = qty * price;
+                                            setSellData({ ...sellData, quantity: e.target.value, total_amount: total.toString() });
+                                        }}
                                         placeholder="Qty"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
                                     />
@@ -748,7 +820,12 @@ export default function Index({ reservations, filters, locations = [] }) {
                                         step="0.01"
                                         min="0"
                                         value={sellData.price_per_unit}
-                                        onChange={(e) => setSellData({ ...sellData, price_per_unit: e.target.value })}
+                                        onChange={(e) => {
+                                            const price = e.target.value ? parseFloat(e.target.value) : 0;
+                                            const qty = sellData.quantity ? parseFloat(sellData.quantity) : 0;
+                                            const total = qty * price;
+                                            setSellData({ ...sellData, price_per_unit: e.target.value, total_amount: total.toString() });
+                                        }}
                                         placeholder="Price"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
                                     />
@@ -764,9 +841,9 @@ export default function Index({ reservations, filters, locations = [] }) {
                                         step="0.01"
                                         min="0"
                                         value={sellData.total_amount}
-                                        onChange={(e) => setSellData({ ...sellData, total_amount: e.target.value })}
+                                        readOnly
                                         placeholder="Total"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm cursor-not-allowed"
                                     />
                                 </div>
 

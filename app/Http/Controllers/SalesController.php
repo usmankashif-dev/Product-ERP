@@ -18,7 +18,6 @@ class SalesController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'client_id' => 'nullable|exists:clients,id',
             'reservation_id' => 'nullable|exists:reservations,id',
             'quantity' => 'required|integer|min:1',
             'price_per_unit' => 'nullable|numeric|min:0',
@@ -26,6 +25,9 @@ class SalesController extends Controller
             'date' => 'required|date_format:Y-m-d',
             'payment_method' => 'nullable|in:cash,credit_card,debit_card,bank_transfer,check',
             'platform' => 'nullable|string|max:255',
+            'customer_name' => 'nullable|string|max:255',
+            'customer_phone' => 'nullable|string|max:255',
+            'customer_address' => 'nullable|string',
         ]);
 
         try {
@@ -47,16 +49,18 @@ class SalesController extends Controller
                     }
                 }
 
-                // Create the sale record (without reservation_id since it's not part of sales table)
+                // Create the sale record
                 $saleData = [
                     'product_id' => $validated['product_id'],
-                    'client_id' => $validated['client_id'] ?? null,
                     'quantity' => $validated['quantity'],
                     'price_per_unit' => $validated['price_per_unit'] ?? null,
                     'total_amount' => $validated['total_amount'],
                     'date' => $validated['date'],
                     'payment_method' => $validated['payment_method'] ?? null,
                     'platform' => $validated['platform'] ?? null,
+                    'customer_name' => $validated['customer_name'] ?? null,
+                    'customer_phone' => $validated['customer_phone'] ?? null,
+                    'customer_address' => $validated['customer_address'] ?? null,
                 ];
                 Sale::create($saleData);
 

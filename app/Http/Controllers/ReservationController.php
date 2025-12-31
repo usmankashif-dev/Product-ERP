@@ -67,7 +67,6 @@ class ReservationController extends Controller
     public function create(Request $request)
     {
         $products = Product::all();
-        $clients = Client::all();
         $locations = Product::distinct()->pluck('location')->filter()->values()->toArray();
         if (empty($locations)) {
             $locations = ['warehouse', 'shop', 'other'];
@@ -80,7 +79,6 @@ class ReservationController extends Controller
 
         return Inertia::render('Reservations/Create', [
             'products' => $products,
-            'clients' => $clients,
             'selectedProduct' => $selectedProduct,
             'locations' => $locations,
         ]);
@@ -94,28 +92,10 @@ class ReservationController extends Controller
             'size' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
             'date' => 'nullable|date_format:Y-m-d',
+            'client_name' => 'required|string|max:255',
+            'client_phone' => 'nullable|string|max:255',
+            'client_address' => 'nullable|string',
         ]);
-
-        $clientId = $request->client_id;
-
-        if ($request->filled('newClientName')) {
-            $request->validate([
-                'newClientName' => 'required|string|max:255',
-                'newClientEmail' => 'nullable|email|unique:clients,email',
-                'newClientPhone' => 'nullable|string|max:255',
-            ]);
-
-            $client = Client::create([
-                'name' => $request->newClientName,
-                'email' => $request->newClientEmail ?: null,
-                'phone' => $request->newClientPhone ?: null,
-            ]);
-            $clientId = $client->id;
-        } else {
-            $request->validate([
-                'client_id' => 'required|exists:clients,id',
-            ]);
-        }
 
         $product = Product::find($request->product_id);
         
@@ -123,15 +103,21 @@ class ReservationController extends Controller
         $reservationDate = $request->date ? $request->date : null;
         
         // Check if a similar reservation already exists
-        $existingReservation = Reservation::where('product_id', $request->product_id)
-            ->where('client_id', $clientId)
+        $query = Reservation::where('product_id', $request->product_id)
+            ->where('client_name', $request->client_name)
             ->where('size', $request->size)
-            ->whereDate('date', $reservationDate)
-            ->where('status', 'pending') // Only merge pending reservations
-            ->first();
+            ->where('status', 'pending'); // Only merge pending reservations
+        
+        if ($reservationDate) {
+            $query->whereDate('date', $reservationDate);
+        } else {
+            $query->whereNull('date');
+        }
+        
+        $existingReservation = $query->first();
 
         try {
-            DB::transaction(function () use ($request, $clientId, $product, $existingReservation, $reservationDate) {
+            DB::transaction(function () use ($request, $product, $existingReservation, $reservationDate) {
                 if ($existingReservation) {
                     // Update existing reservation
                     $oldQuantity = $existingReservation->quantity;
@@ -139,18 +125,23 @@ class ReservationController extends Controller
                     $existingReservation->update([
                         'quantity' => $newQuantity,
                         'reserved_at' => now(), // Update timestamp
+                        'client_name' => $request->client_name,
+                        'client_phone' => $request->client_phone,
+                        'client_address' => $request->client_address,
                     ]);
                 } else {
                     // Create new reservation
                     Reservation::create([
                         'product_id' => $request->product_id,
                         'product_name' => $product->name,
-                        'client_id' => $clientId,
                         'quantity' => (int) $request->quantity,
                         'size' => $request->size,
                         'location' => $request->location,
                         'date' => $reservationDate,
                         'reserved_at' => now(),
+                        'client_name' => $request->client_name,
+                        'client_phone' => $request->client_phone,
+                        'client_address' => $request->client_address,
                     ]);
                 }
             });
@@ -179,9 +170,8 @@ class ReservationController extends Controller
      */
     public function edit(Reservation $reservation)
     {
-        $reservation->load('product', 'client');
+        $reservation->load('product');
         $products = Product::all();
-        $clients = Client::all();
         $locations = Product::distinct()->pluck('location')->filter()->values()->toArray();
         if (empty($locations)) {
             $locations = ['warehouse', 'shop', 'other'];
@@ -190,7 +180,6 @@ class ReservationController extends Controller
         return Inertia::render('Reservations/Edit', [
             'reservation' => $reservation,
             'products' => $products,
-            'clients' => $clients,
             'locations' => $locations
         ]);
     }
@@ -202,11 +191,13 @@ class ReservationController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'client_id' => 'required|exists:clients,id',
             'quantity' => 'required|integer|min:0',
             'size' => 'nullable|string|max:255',
             'date' => 'nullable|date_format:Y-m-d',
             'status' => 'required|in:pending,confirmed,cancelled',
+            'client_name' => 'required|string|max:255',
+            'client_phone' => 'nullable|string|max:255',
+            'client_address' => 'nullable|string',
         ]);
 
         $newQuantity = intval($request->quantity);
@@ -219,12 +210,14 @@ class ReservationController extends Controller
                 $reservation->update([
                     'product_id' => $newProductId,
                     'product_name' => Product::find($newProductId)->name ?? 'Unknown',
-                    'client_id' => intval($request->client_id),
                     'quantity' => $newQuantity,
                     'size' => $request->size,
                     'location' => $request->location,
                     'date' => $request->date,
                     'status' => $request->status,
+                    'client_name' => $request->client_name,
+                    'client_phone' => $request->client_phone,
+                    'client_address' => $request->client_address,
                 ]);
             });
 

@@ -17,6 +17,9 @@ export default function Create({ locations: initialLocations = [] }) {
         price: '',
         description: '',
         image: null,
+        client_name: '',
+        client_phone: '',
+        client_address: '',
     });
 
     const handleLocationChange = (e) => {
@@ -74,42 +77,60 @@ export default function Create({ locations: initialLocations = [] }) {
                                 </ol>
                             </nav>
                             <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Name</label>
+                                {/* Name Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Product Name <span className="text-red-500">*</span>
+                                    </label>
                                     <input
                                         type="text"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                        placeholder="Enter product name"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     />
-                                    {errors.name && <div className="text-red-500">{errors.name}</div>}
+                                    {errors.name && <div className="text-red-500 text-sm mt-1">{errors.name}</div>}
                                 </div>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Size</label>
-                                    <input
-                                        type="text"
-                                        value={data.size}
-                                        onChange={(e) => setData('size', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
-                                    />
-                                    {errors.size && <div className="text-red-500">{errors.size}</div>}
+
+                                {/* Size and Color - Two Column */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Size <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.size}
+                                            onChange={(e) => setData('size', e.target.value)}
+                                            placeholder="e.g., Large, Medium"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        />
+                                        {errors.size && <div className="text-red-500 text-sm mt-1">{errors.size}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Color <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.color}
+                                            onChange={(e) => setData('color', e.target.value)}
+                                            placeholder="e.g., Red, Blue"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        />
+                                        {errors.color && <div className="text-red-500 text-sm mt-1">{errors.color}</div>}
+                                    </div>
                                 </div>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Color</label>
-                                    <input
-                                        type="text"
-                                        value={data.color}
-                                        onChange={(e) => setData('color', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
-                                    />
-                                    {errors.color && <div className="text-red-500">{errors.color}</div>}
-                                </div>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Location</label>
+
+                                {/* Location Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Location <span className="text-red-500">*</span>
+                                    </label>
                                     <select
                                         value={data.location}
                                         onChange={handleLocationChange}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     >
                                         <option value="">Select Location</option>
                                         {locations.map((loc) => (
@@ -119,24 +140,24 @@ export default function Create({ locations: initialLocations = [] }) {
                                         ))}
                                         <option value="add_new">+ Add New Location</option>
                                     </select>
-                                    {errors.location && <div className="text-red-500">{errors.location}</div>}
+                                    {errors.location && <div className="text-red-500 text-sm mt-1">{errors.location}</div>}
                                 </div>
 
                                 {showNewLocation && (
-                                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
-                                        <label className="block text-gray-700 mb-2">New Location Name</label>
+                                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">New Location Name</label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
                                                 value={newLocationName}
                                                 onChange={(e) => setNewLocationName(e.target.value)}
                                                 placeholder="Enter location name"
-                                                className="flex-1 border border-gray-300 rounded px-3 py-2"
+                                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={handleAddLocation}
-                                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                                             >
                                                 Add
                                             </button>
@@ -146,66 +167,147 @@ export default function Create({ locations: initialLocations = [] }) {
                                                     setShowNewLocation(false);
                                                     setNewLocationName('');
                                                 }}
-                                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
                                             >
                                                 Cancel
                                             </button>
                                         </div>
                                     </div>
                                 )}
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Date</label>
-                                    <input
-                                        type="date"
-                                        value={data.date}
-                                        onChange={(e) => setData('date', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
-                                    />
-                                    {errors.date && <div className="text-red-500">{errors.date}</div>}
+
+                                {/* Date and Quantity - Two Column */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={data.date}
+                                            onChange={(e) => setData('date', e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        />
+                                        {errors.date && <div className="text-red-500 text-sm mt-1">{errors.date}</div>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Quantity <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={data.quantity}
+                                            onChange={(e) => setData('quantity', e.target.value)}
+                                            placeholder="0"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        />
+                                        {errors.quantity && <div className="text-red-500 text-sm mt-1">{errors.quantity}</div>}
+                                    </div>
                                 </div>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Quantity</label>
-                                    <input
-                                        type="number"
-                                        value={data.quantity}
-                                        onChange={(e) => setData('quantity', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
-                                    />
-                                    {errors.quantity && <div className="text-red-500">{errors.quantity}</div>}
-                                </div>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Price</label>
+
+                                {/* Price Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Price <span className="text-gray-400">(Optional)</span>
+                                    </label>
                                     <input
                                         type="number"
                                         step="0.01"
+                                        min="0"
                                         value={data.price}
                                         onChange={(e) => setData('price', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                        placeholder="0.00"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     />
-                                    {errors.price && <div className="text-red-500">{errors.price}</div>}
+                                    {errors.price && <div className="text-red-500 text-sm mt-1">{errors.price}</div>}
                                 </div>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Description</label>
+
+                                {/* Description Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Description <span className="text-gray-400">(Optional)</span>
+                                    </label>
                                     <textarea
                                         value={data.description}
                                         onChange={(e) => setData('description', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                        placeholder="Enter product description"
+                                        rows="4"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                                     ></textarea>
-                                    {errors.description && <div className="text-red-500">{errors.description}</div>}
+                                    {errors.description && <div className="text-red-500 text-sm mt-1">{errors.description}</div>}
                                 </div>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Product Image</label>
+
+                                {/* Client Information Section */}
+                                <div className="border-t pt-6 mt-6">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Client Information</h3>
+                                    
+                                    {/* Client Name Field */}
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Client Name <span className="text-gray-400">(Optional)</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.client_name}
+                                            onChange={(e) => setData('client_name', e.target.value)}
+                                            placeholder="Enter client name"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        />
+                                        {errors.client_name && <div className="text-red-500 text-sm mt-1">{errors.client_name}</div>}
+                                    </div>
+
+                                    {/* Client Phone and Address - Two Column */}
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Contact Number <span className="text-gray-400">(Optional)</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={data.client_phone}
+                                                onChange={(e) => setData('client_phone', e.target.value)}
+                                                placeholder="e.g., +1234567890"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                            />
+                                            {errors.client_phone && <div className="text-red-500 text-sm mt-1">{errors.client_phone}</div>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Address <span className="text-gray-400">(Optional)</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={data.client_address}
+                                                onChange={(e) => setData('client_address', e.target.value)}
+                                                placeholder="Enter client address"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                            />
+                                            {errors.client_address && <div className="text-red-500 text-sm mt-1">{errors.client_address}</div>}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Image Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Product Image <span className="text-gray-400">(Optional)</span>
+                                    </label>
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={(e) => setData('image', e.target.files[0])}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
                                     />
-                                    {errors.image && <div className="text-red-500">{errors.image}</div>}
-                                    <p className="text-sm text-gray-500 mt-1">Accepted formats: JPEG, PNG, JPG, GIF. Max size: 2MB</p>
+                                    {errors.image && <div className="text-red-500 text-sm mt-1">{errors.image}</div>}
+                                    <p className="text-sm text-gray-500 mt-2">Accepted formats: JPEG, PNG, JPG, GIF. Max size: 2MB</p>
                                 </div>
+
+                                {/* Submit Button */}
                                 <div className="pt-6 border-t border-gray-200">
-                                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm">
+                                    <button 
+                                        type="submit" 
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-sm"
+                                    >
                                         Create Product
                                     </button>
                                 </div>

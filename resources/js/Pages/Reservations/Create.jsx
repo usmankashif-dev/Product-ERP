@@ -2,34 +2,21 @@ import React, { useState } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Create({ products, clients, selectedProduct, locations: initialLocations = [] }) {
-    const [showNewClient, setShowNewClient] = useState(false);
+export default function Create({ products, selectedProduct, locations: initialLocations = [] }) {
     const [showNewLocation, setShowNewLocation] = useState(false);
     const [newLocationName, setNewLocationName] = useState('');
     const [locations, setLocations] = useState(initialLocations.length > 0 ? initialLocations : ['warehouse', 'shop', 'other']);
     
     const { data, setData, post, errors } = useForm({
         product_id: selectedProduct ? selectedProduct.id : '',
-        client_id: '',
         quantity: 1,
         size: '',
         location: '',
         date: '',
-        newClientName: '',
-        newClientEmail: '',
-        newClientPhone: '',
+        client_name: '',
+        client_phone: '',
+        client_address: '',
     });
-
-    const handleClientChange = (e) => {
-        const value = e.target.value;
-        if (value === 'add_new') {
-            setShowNewClient(true);
-            setData('client_id', '');
-        } else {
-            setShowNewClient(false);
-            setData('client_id', value);
-        }
-    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -62,6 +49,14 @@ export default function Create({ products, clients, selectedProduct, locations: 
                                     <li className="text-gray-900 font-medium">Create</li>
                                 </ol>
                             </nav>
+                            {Object.keys(errors).length > 0 && (
+                                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-700">
+                                    <p className="font-semibold mb-2">Errors:</p>
+                                    {Object.entries(errors).map(([field, message]) => (
+                                        <p key={field}>{message}</p>
+                                    ))}
+                                </div>
+                            )}
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Product</label>
@@ -80,64 +75,13 @@ export default function Create({ products, clients, selectedProduct, locations: 
                                     {errors.product_id && <div className="text-red-500">{errors.product_id}</div>}
                                 </div>
                                 <div className="mb-4">
-                                    <label className="block text-gray-700">Client</label>
-                                    <select
-                                        value={showNewClient ? 'add_new' : data.client_id}
-                                        onChange={handleClientChange}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
-                                    >
-                                        <option value="">Select Client</option>
-                                        {clients.map((client) => (
-                                            <option key={client.id} value={client.id}>
-                                                {client.name} - {client.email}
-                                            </option>
-                                        ))}
-                                        <option value="add_new">+ Add New Client</option>
-                                    </select>
-                                    {errors.client_id && <div className="text-red-500">{errors.client_id}</div>}
-                                </div>
-                                {showNewClient && (
-                                    <>
-                                        <div className="mb-4">
-                                            <label className="block text-gray-700">New Client Name</label>
-                                            <input
-                                                type="text"
-                                                value={data.newClientName}
-                                                onChange={(e) => setData('newClientName', e.target.value)}
-                                                className="w-full border border-gray-300 rounded px-3 py-2"
-                                            />
-                                            {errors.newClientName && <div className="text-red-500">{errors.newClientName}</div>}
-                                        </div>
-                                        <div className="mb-4">
-                                            <label className="block text-gray-700">New Client Email</label>
-                                            <input
-                                                type="email"
-                                                value={data.newClientEmail}
-                                                onChange={(e) => setData('newClientEmail', e.target.value)}
-                                                className="w-full border border-gray-300 rounded px-3 py-2"
-                                            />
-                                            {errors.newClientEmail && <div className="text-red-500">{errors.newClientEmail}</div>}
-                                        </div>
-                                        <div className="mb-4">
-                                            <label className="block text-gray-700">New Client Phone</label>
-                                            <input
-                                                type="text"
-                                                value={data.newClientPhone}
-                                                onChange={(e) => setData('newClientPhone', e.target.value)}
-                                                className="w-full border border-gray-300 rounded px-3 py-2"
-                                            />
-                                            {errors.newClientPhone && <div className="text-red-500">{errors.newClientPhone}</div>}
-                                        </div>
-                                    </>
-                                )}
-                                <div className="mb-4">
                                     <label className="block text-gray-700">Quantity</label>
                                     <input
                                         type="number"
                                         value={data.quantity}
-                                        onChange={(e) => setData('quantity', e.target.value)}
+                                        onChange={(e) => setData('quantity', e.target.value === '' ? '' : parseInt(e.target.value))}
                                         className="w-full border border-gray-300 rounded px-3 py-2"
-                                        min="1"
+                                        min="0"
                                     />
                                     {errors.quantity && <div className="text-red-500">{errors.quantity}</div>}
                                 </div>
@@ -227,6 +171,42 @@ export default function Create({ products, clients, selectedProduct, locations: 
                                         className="w-full border border-gray-300 rounded px-3 py-2"
                                     />
                                     {errors.date && <div className="text-red-500">{errors.date}</div>}
+                                </div>
+                                <div className="border-t border-gray-200 pt-6">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Client Information</h3>
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Name</label>
+                                        <input
+                                            type="text"
+                                            value={data.client_name}
+                                            onChange={(e) => setData('client_name', e.target.value)}
+                                            placeholder="Client name"
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                        />
+                                        {errors.client_name && <div className="text-red-500">{errors.client_name}</div>}
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Phone</label>
+                                        <input
+                                            type="text"
+                                            value={data.client_phone}
+                                            onChange={(e) => setData('client_phone', e.target.value)}
+                                            placeholder="Client phone"
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                        />
+                                        {errors.client_phone && <div className="text-red-500">{errors.client_phone}</div>}
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Address</label>
+                                        <textarea
+                                            value={data.client_address}
+                                            onChange={(e) => setData('client_address', e.target.value)}
+                                            placeholder="Client address"
+                                            className="w-full border border-gray-300 rounded px-3 py-2 resize-none"
+                                            rows="3"
+                                        ></textarea>
+                                        {errors.client_address && <div className="text-red-500">{errors.client_address}</div>}
+                                    </div>
                                 </div>
                                 <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm">Create Reservation</button>
                             </form>

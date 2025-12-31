@@ -37,8 +37,13 @@ export default function Show({ reservation }) {
                                     <strong>Product:</strong> {reservation.product.name} ({reservation.product.size}, {reservation.product.color})
                                 </div>
                                 <div>
-                                    <strong>Client:</strong> {reservation.client.name} ({reservation.client.email})
+                                    <strong>Client:</strong> {reservation.client_name || reservation.client?.name || 'N/A'} {(reservation.client_phone || reservation.client?.phone) && <span>({reservation.client_phone || reservation.client?.phone})</span>}
                                 </div>
+                                {reservation.client_address && (
+                                    <div>
+                                        <strong>Address:</strong> {reservation.client_address}
+                                    </div>
+                                )}
                                 <div>
                                     <strong>Quantity:</strong> {reservation.quantity}
                                 </div>

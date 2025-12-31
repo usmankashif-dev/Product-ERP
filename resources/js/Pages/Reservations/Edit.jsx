@@ -2,19 +2,21 @@ import React from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Edit({ reservation, products, clients, locations: initialLocations = [] }) {
+export default function Edit({ reservation, products, locations: initialLocations = [] }) {
     const [showNewLocation, setShowNewLocation] = React.useState(false);
     const [newLocationName, setNewLocationName] = React.useState('');
     const [locations, setLocations] = React.useState(initialLocations.length > 0 ? initialLocations : ['warehouse', 'shop', 'other']);
     
     const { data, setData, put, errors } = useForm({
         product_id: reservation.product_id || '',
-        client_id: reservation.client_id || '',
         quantity: reservation.quantity || 1,
         size: reservation.size || '',
         location: reservation.location || '',
         date: reservation.date || '',
         status: reservation.status || 'pending',
+        client_name: reservation.client_name || '',
+        client_phone: reservation.client_phone || '',
+        client_address: reservation.client_address || '',
     });
 
     const handleSubmit = (e) => {
@@ -68,22 +70,6 @@ export default function Edit({ reservation, products, clients, locations: initia
                                         ))}
                                     </select>
                                     {errors.product_id && <div className="text-red-500">{errors.product_id}</div>}
-                                </div>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Client</label>
-                                    <select
-                                        value={data.client_id}
-                                        onChange={(e) => setData('client_id', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
-                                    >
-                                        <option value="">Select Client</option>
-                                        {clients.map((client) => (
-                                            <option key={client.id} value={client.id}>
-                                                {client.name} - {client.email}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.client_id && <div className="text-red-500">{errors.client_id}</div>}
                                 </div>
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Quantity</label>
@@ -195,6 +181,42 @@ export default function Edit({ reservation, products, clients, locations: initia
                                         <option value="cancelled">Cancelled</option>
                                     </select>
                                     {errors.status && <div className="text-red-500">{errors.status}</div>}
+                                </div>
+                                <div className="border-t border-gray-200 pt-6">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Client Information</h3>
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Name</label>
+                                        <input
+                                            type="text"
+                                            value={data.client_name}
+                                            onChange={(e) => setData('client_name', e.target.value)}
+                                            placeholder="Client name"
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                        />
+                                        {errors.client_name && <div className="text-red-500">{errors.client_name}</div>}
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Phone</label>
+                                        <input
+                                            type="text"
+                                            value={data.client_phone}
+                                            onChange={(e) => setData('client_phone', e.target.value)}
+                                            placeholder="Client phone"
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                        />
+                                        {errors.client_phone && <div className="text-red-500">{errors.client_phone}</div>}
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Address</label>
+                                        <textarea
+                                            value={data.client_address}
+                                            onChange={(e) => setData('client_address', e.target.value)}
+                                            placeholder="Client address"
+                                            className="w-full border border-gray-300 rounded px-3 py-2 resize-none"
+                                            rows="3"
+                                        ></textarea>
+                                        {errors.client_address && <div className="text-red-500">{errors.client_address}</div>}
+                                    </div>
                                 </div>
                                 <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm">Update Reservation</button>
                             </form>

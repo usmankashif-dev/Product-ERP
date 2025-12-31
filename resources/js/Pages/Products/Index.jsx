@@ -42,6 +42,9 @@ export default function Index({ products, filters, locations: initialLocations =
         date: new Date().toISOString().split('T')[0],
         payment_method: 'cash',
         platform: '',
+        customer_name: '',
+        customer_phone: '',
+        customer_address: '',
     });
     const [sellError, setSellError] = useState('');
     const [isSelling, setIsSelling] = useState(false);
@@ -120,10 +123,13 @@ export default function Index({ products, filters, locations: initialLocations =
         setSelectedProduct(product);
         setSellData({
             quantity: '',
-            price_per_unit: '',
+            price_per_unit: product.price ? product.price.toString() : '',
             total_amount: '',
             date: new Date().toISOString().split('T')[0],
             payment_method: 'cash',
+            customer_name: '',
+            customer_phone: '',
+            customer_address: '',
         });
         setSellError('');
         setShowSellModal(true);
@@ -140,6 +146,9 @@ export default function Index({ products, filters, locations: initialLocations =
             date: new Date().toISOString().split('T')[0],
             payment_method: 'cash',
             platform: '',
+            customer_name: '',
+            customer_phone: '',
+            customer_address: '',
         });
         setSellError('');
     };
@@ -268,6 +277,18 @@ export default function Index({ products, filters, locations: initialLocations =
             setSellError('Date is required');
             return;
         }
+        if (!sellData.customer_name || !sellData.customer_name.trim()) {
+            setSellError('Customer name is required');
+            return;
+        }
+        if (!sellData.customer_phone || !sellData.customer_phone.trim()) {
+            setSellError('Customer phone is required');
+            return;
+        }
+        if (!sellData.customer_address || !sellData.customer_address.trim()) {
+            setSellError('Customer address is required');
+            return;
+        }
 
         // Check if quantity is available (considering reservations)
         const availableQty = getAvailableQuantity(selectedProduct.id);
@@ -286,6 +307,9 @@ export default function Index({ products, filters, locations: initialLocations =
             date: sellData.date,
             payment_method: sellData.payment_method,
             platform: sellData.platform,
+            customer_name: sellData.customer_name,
+            customer_phone: sellData.customer_phone,
+            customer_address: sellData.customer_address,
         }, {
             onSuccess: () => {
                 setIsSelling(false);
@@ -476,6 +500,7 @@ export default function Index({ products, filters, locations: initialLocations =
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Info</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
@@ -621,6 +646,23 @@ export default function Index({ products, filters, locations: initialLocations =
                                                     </span>
                                                 </div>
                                             </td>
+                                            <td className="px-6 py-4 text-sm">
+                                                {product.client_name || product.client_phone || product.client_address ? (
+                                                    <div className="space-y-1">
+                                                        {product.client_name && (
+                                                            <p className="font-medium text-gray-900">{product.client_name}</p>
+                                                        )}
+                                                        {product.client_phone && (
+                                                            <p className="text-gray-600 text-xs">📞 {product.client_phone}</p>
+                                                        )}
+                                                        {product.client_address && (
+                                                            <p className="text-gray-600 text-xs">📍 {product.client_address.substring(0, 30)}{product.client_address.length > 30 ? '...' : ''}</p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-gray-400 italic text-xs">No client info</p>
+                                                )}
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex items-center space-x-2">
                                                     <Link href={`/products/${product.id}`} className="text-blue-600 hover:text-blue-900 transition-colors" title="View">
@@ -709,14 +751,6 @@ export default function Index({ products, filters, locations: initialLocations =
                                 </svg>
                                 <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
                                 <p className="mt-1 text-sm text-gray-500">Get started by creating your first product.</p>
-                                <div className="mt-6">
-                                    <Link href="/products/create" className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
-                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
-                                        Create Product
-                                    </Link>
-                                </div>
                             </div>
                         )}
                     </div>
@@ -770,6 +804,54 @@ export default function Index({ products, filters, locations: initialLocations =
                                 </div>
                             )}
 
+                            {/* Customer Information Section */}
+                            <div className="border-t pt-3">
+                                <p className="text-sm font-semibold text-gray-700 mb-3">Customer Information</p>
+                                <div className="space-y-3">
+                                    {/* Customer Name */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Name <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={sellData.customer_name}
+                                            onChange={(e) => setSellData({ ...sellData, customer_name: e.target.value })}
+                                            placeholder="Customer name"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                        />
+                                    </div>
+
+                                    {/* Customer Phone */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Phone <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={sellData.customer_phone}
+                                            onChange={(e) => setSellData({ ...sellData, customer_phone: e.target.value })}
+                                            placeholder="Phone number"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                        />
+                                    </div>
+
+                                    {/* Customer Address */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Address <span className="text-red-500">*</span>
+                                        </label>
+                                        <textarea
+                                            value={sellData.customer_address}
+                                            onChange={(e) => setSellData({ ...sellData, customer_address: e.target.value })}
+                                            placeholder="Customer address"
+                                            rows="2"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Two Column Grid */}
                             <div className="grid grid-cols-2 gap-3">
                                 {/* Quantity Field */}
@@ -782,7 +864,12 @@ export default function Index({ products, filters, locations: initialLocations =
                                         min="1"
                                         max={getAvailableQuantity(selectedProduct.id)}
                                         value={sellData.quantity}
-                                        onChange={(e) => setSellData({ ...sellData, quantity: e.target.value })}
+                                        onChange={(e) => {
+                                            const qty = e.target.value ? parseFloat(e.target.value) : 0;
+                                            const price = sellData.price_per_unit ? parseFloat(sellData.price_per_unit) : 0;
+                                            const total = qty * price;
+                                            setSellData({ ...sellData, quantity: e.target.value, total_amount: total.toString() });
+                                        }}
                                         placeholder="Enter quantity"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
                                     />
@@ -811,7 +898,12 @@ export default function Index({ products, filters, locations: initialLocations =
                                         step="0.01"
                                         min="0"
                                         value={sellData.price_per_unit}
-                                        onChange={(e) => setSellData({ ...sellData, price_per_unit: e.target.value })}
+                                        onChange={(e) => {
+                                            const price = e.target.value ? parseFloat(e.target.value) : 0;
+                                            const qty = sellData.quantity ? parseFloat(sellData.quantity) : 0;
+                                            const total = qty * price;
+                                            setSellData({ ...sellData, price_per_unit: e.target.value, total_amount: total.toString() });
+                                        }}
                                         placeholder="Price"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
                                     />
@@ -827,9 +919,9 @@ export default function Index({ products, filters, locations: initialLocations =
                                         step="0.01"
                                         min="0"
                                         value={sellData.total_amount}
-                                        onChange={(e) => setSellData({ ...sellData, total_amount: e.target.value })}
+                                        readOnly
                                         placeholder="Total"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm cursor-not-allowed"
                                     />
                                 </div>
 
