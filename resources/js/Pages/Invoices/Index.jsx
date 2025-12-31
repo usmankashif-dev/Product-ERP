@@ -73,16 +73,16 @@ export default function Index({ invoices }) {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     {/* Header Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-                            <div className="text-sm text-gray-600">Total Invoices</div>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-l-4 border-l-blue-500 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-slideUp" style={{animationDelay: '0ms'}}>
+                            <div className="text-sm text-gray-600 font-medium">Total Invoices</div>
                             <div className="text-3xl font-bold text-gray-900 mt-2">{invoicesArray.length}</div>
                         </div>
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
-                            <div className="text-sm text-gray-600">Paid</div>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-l-4 border-l-green-500 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-slideUp" style={{animationDelay: '50ms'}}>
+                            <div className="text-sm text-gray-600 font-medium">Paid</div>
                             <div className="text-3xl font-bold text-green-600 mt-2">${getPaidAmount()}</div>
                         </div>
-                        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
-                            <div className="text-sm text-gray-600">Total Amount</div>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-l-4 border-l-orange-500 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-slideUp" style={{animationDelay: '100ms'}}>
+                            <div className="text-sm text-gray-600 font-medium">Total Amount</div>
                             <div className="text-3xl font-bold text-orange-600 mt-2">${getTotalAmount()}</div>
                         </div>
                     </div>
@@ -164,8 +164,8 @@ export default function Index({ invoices }) {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
-                                        {filteredInvoices.map((invoice) => (
-                                            <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
+                                        {filteredInvoices.map((invoice, index) => (
+                                            <tr key={invoice.id} className="hover:bg-yellow-50 transition-all duration-200 hover:shadow-md border-l-4 border-l-transparent hover:border-l-yellow-500 animate-slideUp" style={{animationDelay: `${index * 50}ms`}}>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                                                     <Link href={`/invoices/${invoice.id}`}>
                                                         {invoice.invoice_number}
@@ -233,6 +233,23 @@ export default function Index({ invoices }) {
                     )}
                 </div>
             </div>
+
+            <style>{`
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                .animate-slideUp {
+                    animation: slideUp 0.6s ease-out forwards;
+                    opacity: 0;
+                }
+            `}</style>
         </AuthenticatedLayout>
     );
 }

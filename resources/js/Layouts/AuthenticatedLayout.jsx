@@ -221,14 +221,72 @@ export default function AuthenticatedLayout({ header, children }) {
             </nav>
 
             {header && (
-                <header className="bg-white shadow">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
+                <header className="border-b border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 shadow-sm animate-slideDown">
+                    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                        <div className="text-gray-800 font-semibold text-lg">{header}</div>
                     </div>
                 </header>
             )}
 
-            <main>{children}</main>
+            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <div className="animate-fadeIn">
+                    {children}
+                </div>
+            </main>
+
+            <style>{`
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes slideDown {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes scaleIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.95);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                .animate-fadeIn {
+                    animation: fadeIn 0.5s ease-out;
+                }
+                .animate-slideUp {
+                    animation: slideUp 0.6s ease-out forwards;
+                    opacity: 0;
+                }
+                .animate-slideDown {
+                    animation: slideDown 0.5s ease-out;
+                }
+                .animate-scaleIn {
+                    animation: scaleIn 0.4s ease-out;
+                }
+            `}</style>
         </div>
     );
 }

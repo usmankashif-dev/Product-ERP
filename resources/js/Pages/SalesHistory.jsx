@@ -58,7 +58,7 @@ export default function SalesHistory({ sales }) {
 
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-slideUp" style={{animationDelay: '0ms'}}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600 font-medium">Total Sales</p>
@@ -73,7 +73,7 @@ export default function SalesHistory({ sales }) {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-slideUp" style={{animationDelay: '50ms'}}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600 font-medium">Total Units Sold</p>
@@ -88,7 +88,7 @@ export default function SalesHistory({ sales }) {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-slideUp" style={{animationDelay: '100ms'}}>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600 font-medium">Total Revenue</p>
@@ -163,7 +163,7 @@ export default function SalesHistory({ sales }) {
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {filteredSales.map((sale, idx) => (
-                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                            <tr key={idx} className="hover:bg-blue-50 transition-all duration-200 hover:shadow-md border-l-4 border-l-transparent hover:border-l-blue-500 animate-slideUp" style={{animationDelay: `${idx * 50}ms`}}>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">
                                                         {new Date(sale.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -243,6 +243,23 @@ export default function SalesHistory({ sales }) {
                     </div>
                 </div>
             </div>
+
+            <style>{`
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                .animate-slideUp {
+                    animation: slideUp 0.6s ease-out forwards;
+                    opacity: 0;
+                }
+            `}</style>
         </AuthenticatedLayout>
     );
 }

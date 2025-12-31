@@ -501,8 +501,8 @@ export default function Index({ reservations, filters, locations = [] }) {
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        {reservations.map((reservation) => (
-                                            <tr key={reservation.id} className="hover:bg-gray-50 transition-colors">
+                                        {reservations.map((reservation, index) => (
+                                            <tr key={reservation.id} className="hover:bg-purple-50 transition-all duration-200 hover:shadow-md border-l-4 border-l-transparent hover:border-l-purple-500 animate-slideUp" style={{animationDelay: `${index * 50}ms`}}>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">{reservation.product_name || reservation.product?.name || 'Product'}</div>
                                                     <div className="text-xs text-gray-500">ID: {reservation.product?.id || 'N/A'}</div>
@@ -1153,6 +1153,23 @@ export default function Index({ reservations, filters, locations = [] }) {
             )}
                 </div>
             </div>
+
+            <style>{`
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                .animate-slideUp {
+                    animation: slideUp 0.6s ease-out forwards;
+                    opacity: 0;
+                }
+            `}</style>
         </AuthenticatedLayout>
     );
 }

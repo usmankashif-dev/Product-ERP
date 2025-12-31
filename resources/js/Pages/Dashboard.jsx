@@ -171,7 +171,7 @@ export default function Dashboard({
                     {/* Sales Metrics Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         {salesMetrics.map((metric, idx) => (
-                            <div key={idx} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                            <div key={idx} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-slideUp" style={{animationDelay: `${idx * 100}ms`}}>
                                 <div className={`bg-gradient-to-r ${metric.color} px-6 py-4 text-white`}>
                                     <div className="flex items-center justify-between">
                                         <div>
@@ -297,7 +297,7 @@ export default function Dashboard({
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {productSales.map((sale, idx) => (
-                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                            <tr key={idx} className="hover:bg-blue-50 transition-all duration-200 hover:shadow-md border-l-4 border-l-transparent hover:border-l-blue-500 animate-slideUp" style={{animationDelay: `${idx * 50}ms`}}>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">{sale.product?.name || 'Unknown'}</div>
                                                     <div className="text-xs text-gray-500">{sale.product?.size} - {sale.product?.color}</div>
@@ -323,18 +323,35 @@ export default function Dashboard({
 
                     {/* Quick Links */}
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Link href="/products" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-sm hover:shadow-md">
+                        <Link href="/products" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-sm hover:shadow-md hover:scale-105">
                             📦 Manage Products
                         </Link>
-                        <Link href="/reservations" className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-sm hover:shadow-md">
+                        <Link href="/reservations" className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-sm hover:shadow-md hover:scale-105">
                             📝 Manage Reservations
                         </Link>
-                        <Link href="/sales-history" className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-sm hover:shadow-md">
+                        <Link href="/sales-history" className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-sm hover:shadow-md hover:scale-105">
                             📋 Sales History
                         </Link>
                     </div>
                 </div>
             </div>
+
+            <style>{`
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                .animate-slideUp {
+                    animation: slideUp 0.6s ease-out forwards;
+                    opacity: 0;
+                }
+            `}</style>
         </AuthenticatedLayout>
     );
 }

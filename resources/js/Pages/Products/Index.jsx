@@ -458,7 +458,7 @@ export default function Index({ products, filters, locations: initialLocations =
                                         setData({ name: '', size: '', color: '', location: '' });
                                         get('/products', {}, { preserveState: true });
                                     }}
-                                    className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+                                    className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-all hover:scale-105 active:scale-95"
                                 >
                                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -467,7 +467,7 @@ export default function Index({ products, filters, locations: initialLocations =
                                 </button>
                                 <button
                                     type="submit"
-                                    className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                    className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
                                 >
                                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -505,8 +505,8 @@ export default function Index({ products, filters, locations: initialLocations =
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {products.filter(product => getAvailableQuantity(product.id) > 0).map((product) => (
-                                        <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                                    {products.filter(product => getAvailableQuantity(product.id) > 0).map((product, index) => (
+                                        <tr key={product.id} className="hover:bg-blue-50 transition-all duration-200 hover:shadow-md border-l-4 border-l-transparent hover:border-l-blue-500 animate-slideUp" style={{animationDelay: `${index * 50}ms`}}>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0 h-12 w-12">
@@ -1229,6 +1229,23 @@ export default function Index({ products, filters, locations: initialLocations =
                     </div>
                 </div>
             )}
+
+            <style>{`
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                .animate-slideUp {
+                    animation: slideUp 0.6s ease-out forwards;
+                    opacity: 0;
+                }
+            `}</style>
         </AuthenticatedLayout>
     );
 }
