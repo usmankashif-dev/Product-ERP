@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->foreignId('product_id')->constrained()->onDelete('set null');
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
             $table->integer('quantity');
             $table->string('size')->nullable(); // if reserving specific size

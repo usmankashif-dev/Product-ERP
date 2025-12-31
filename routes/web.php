@@ -7,6 +7,7 @@ use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SalesHistoryController;
 use App\Http\Controllers\DamageController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InvoiceController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -40,6 +41,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/reservations/{reservation}/status', [ReservationController::class, 'updateStatus'])->name('reservations.updateStatus');
     Route::post('/reservations/{reservation}/mark-damaged', [DamageController::class, 'markReservationDamaged'])->name('reservations.markDamaged');
     Route::patch('/api/reservations/{reservation}/quantity', [ReservationController::class, 'updateQuantity'])->name('reservations.updateQuantity');
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+    Route::patch('/invoices/{invoice}/status', [InvoiceController::class, 'updateStatus'])->name('invoices.updateStatus');
+    Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
 });
 
 require __DIR__.'/auth.php';

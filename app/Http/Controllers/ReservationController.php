@@ -20,8 +20,11 @@ class ReservationController extends Controller
 
         // Filter by product name
         if ($request->filled('product')) {
-            $query->whereHas('product', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->product . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('product_name', 'like', '%' . $request->product . '%')
+                  ->orWhereHas('product', function ($subQ) use ($request) {
+                      $subQ->where('name', 'like', '%' . $request->product . '%');
+                  });
             });
         }
 
@@ -42,7 +45,16 @@ class ReservationController extends Controller
             $query->where('size', 'like', '%' . $request->size . '%');
         }
 
-        $reservations = $query->get();
+        // Only show reservations with quantity > 0
+        $query->where('quantity', '>', 0);
+
+        $reservations = $query->get()->map(function ($reservation) {
+            // Fill in product_name from product if not set (for old reservations)
+            if (!$reservation->product_name && $reservation->product) {
+                $reservation->product_name = $reservation->product->name;
+            }
+            return $reservation;
+        });
         $locations = Product::distinct()->pluck('location')->filter()->values()->toArray();
 
         return Inertia::render('Reservations/Index', [
@@ -118,12 +130,6 @@ class ReservationController extends Controller
             ->where('status', 'pending') // Only merge pending reservations
             ->first();
 
-        // Check stock availability
-        $quantityNeeded = (int) $request->quantity; // Always check for the requested quantity
-        if ($product->quantity < $quantityNeeded) {
-            return back()->withErrors(['quantity' => 'Not enough stock available.']);
-        }
-
         try {
             DB::transaction(function () use ($request, $clientId, $product, $existingReservation, $reservationDate) {
                 if ($existingReservation) {
@@ -134,13 +140,11 @@ class ReservationController extends Controller
                         'quantity' => $newQuantity,
                         'reserved_at' => now(), // Update timestamp
                     ]);
-                    
-                    // Only decrement by the additional quantity
-                    $product->decrement('quantity', (int) $request->quantity);
                 } else {
                     // Create new reservation
                     Reservation::create([
                         'product_id' => $request->product_id,
+                        'product_name' => $product->name,
                         'client_id' => $clientId,
                         'quantity' => (int) $request->quantity,
                         'size' => $request->size,
@@ -148,9 +152,6 @@ class ReservationController extends Controller
                         'date' => $reservationDate,
                         'reserved_at' => now(),
                     ]);
-
-                    // Decrease product quantity
-                    $product->decrement('quantity', (int) $request->quantity);
                 }
             });
 
@@ -202,57 +203,22 @@ class ReservationController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'client_id' => 'required|exists:clients,id',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|integer|min:0',
             'size' => 'nullable|string|max:255',
             'date' => 'nullable|date_format:Y-m-d',
             'status' => 'required|in:pending,confirmed,cancelled',
         ]);
 
-        $oldQuantity = intval($reservation->quantity);
-        $oldProductId = intval($reservation->product_id);
         $newQuantity = intval($request->quantity);
         $newProductId = intval($request->product_id);
 
         try {
-            DB::transaction(function () use ($oldQuantity, $oldProductId, $newQuantity, $newProductId, $request, $reservation) {
-                // Handle product quantity adjustments
-                if ($oldProductId === $newProductId) {
-                    // Same product, adjust quantity difference
-                    $quantityDifference = intval($newQuantity - $oldQuantity);
-                    
-                    if ($quantityDifference > 0) {
-                        // Quantity increased, check if enough stock
-                        $product = Product::findOrFail($newProductId);
-                        $product->refresh(); // Refresh to get latest quantity
-                        if ($product->quantity < $quantityDifference) {
-                            throw new \Exception('Not enough stock available. Need ' . $quantityDifference . ' but only ' . $product->quantity . ' available.');
-                        }
-                        $product->decrement('quantity', $quantityDifference);
-                    } elseif ($quantityDifference < 0) {
-                        // Quantity decreased, add back to stock
-                        $product = Product::findOrFail($newProductId);
-                        $product->refresh(); // Refresh to get latest quantity
-                        $amountToAdd = intval(abs($quantityDifference));
-                        $product->increment('quantity', $amountToAdd);
-                    }
-                    // If quantityDifference == 0, no change needed
-                } else {
-                    // Different product
-                    // Add quantity back to old product
-                    $oldProduct = Product::findOrFail($oldProductId);
-                    $oldProduct->increment('quantity', $oldQuantity);
-
-                    // Check if new product has enough stock
-                    $newProduct = Product::findOrFail($newProductId);
-                    if ($newProduct->quantity < $newQuantity) {
-                        throw new \Exception('Not enough stock available.');
-                    }
-                    $newProduct->decrement('quantity', $newQuantity);
-                }
-
-                // Update the reservation - use explicit values to avoid any issues
+            DB::transaction(function () use ($newQuantity, $newProductId, $request, $reservation) {
+                // Simply update the reservation without adjusting product quantities
+                // Available quantity is calculated as: product.quantity - sum(reservation quantities)
                 $reservation->update([
                     'product_id' => $newProductId,
+                    'product_name' => Product::find($newProductId)->name ?? 'Unknown',
                     'client_id' => intval($request->client_id),
                     'quantity' => $newQuantity,
                     'size' => $request->size,
@@ -275,10 +241,8 @@ class ReservationController extends Controller
     {
         try {
             DB::transaction(function () use ($reservation) {
-                // Add quantity back to product when reservation is deleted
-                $product = Product::find($reservation->product_id);
-                $product->increment('quantity', (int) $reservation->quantity);
-
+                // Simply delete the reservation
+                // No need to adjust product quantity since we don't decrement on create
                 $reservation->delete();
             });
 
@@ -321,24 +285,9 @@ class ReservationController extends Controller
         $quantityDifference = $newQuantity - $oldQuantity;
 
         try {
-            DB::transaction(function () use ($oldQuantity, $newQuantity, $quantityDifference, $reservation) {
-                // Adjust product stock based on the quantity change
-                if ($quantityDifference != 0) {
-                    $product = Product::find($reservation->product_id);
-                    
-                    if ($quantityDifference < 0) {
-                        // Quantity decreased, add back to stock
-                        $product->increment('quantity', abs($quantityDifference));
-                    } elseif ($quantityDifference > 0) {
-                        // Quantity increased, check if enough stock
-                        if ($product->quantity < $quantityDifference) {
-                            throw new \Exception('Not enough stock available.');
-                        }
-                        $product->decrement('quantity', $quantityDifference);
-                    }
-                }
-
-                // Update reservation quantity
+            DB::transaction(function () use ($newQuantity, $reservation) {
+                // Simply update reservation quantity
+                // No product quantity adjustment needed
                 $reservation->update(['quantity' => $newQuantity]);
             });
 

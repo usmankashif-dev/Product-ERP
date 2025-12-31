@@ -90,9 +90,9 @@ export default function Edit({ reservation, products, clients, locations: initia
                                     <input
                                         type="number"
                                         value={data.quantity}
-                                        onChange={(e) => setData('quantity', parseInt(e.target.value) || 1)}
+                                        onChange={(e) => setData('quantity', parseInt(e.target.value) || 0)}
                                         className="w-full border border-gray-300 rounded px-3 py-2"
-                                        min="1"
+                                        min="0"
                                     />
                                     {errors.quantity && <div className="text-red-500">{errors.quantity}</div>}
                                 </div>

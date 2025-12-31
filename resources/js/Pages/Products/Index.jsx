@@ -17,12 +17,24 @@ export default function Index({ products, filters, locations: initialLocations =
     const [locations, setLocations] = useState(initialLocations.length > 0 ? initialLocations : ['warehouse', 'shop', 'other']);
     const [showInlineNewLocation, setShowInlineNewLocation] = useState(false);
     const [inlineNewLocationName, setInlineNewLocationName] = useState('');
+    const [openMenuId, setOpenMenuId] = useState(null);
     
     const [showSellModal, setShowSellModal] = useState(false);
     const [showDamagedModal, setShowDamagedModal] = useState(false);
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showCustomPlatform, setShowCustomPlatform] = useState(false);
     const [damagedAmount, setDamagedAmount] = useState('');
+    const [invoiceData, setInvoiceData] = useState({
+        quantity: '',
+        unit_price: '',
+        total_amount: '',
+        invoice_date: new Date().toISOString().split('T')[0],
+        due_date: '',
+        notes: '',
+    });
+    const [invoiceError, setInvoiceError] = useState('');
+    const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
     const [sellData, setSellData] = useState({
         quantity: '',
         price_per_unit: '',
@@ -99,6 +111,11 @@ export default function Index({ products, filters, locations: initialLocations =
         return Math.max(0, product.quantity - reservedQuantity);
     };
 
+    const getAvailableProductsCount = () => {
+        // Count only products that have available quantity (not fully reserved)
+        return products.filter(product => getAvailableQuantity(product.id) > 0).length;
+    };
+
     const openSellModal = (product) => {
         setSelectedProduct(product);
         setSellData({
@@ -159,6 +176,78 @@ export default function Index({ products, filters, locations: initialLocations =
             },
             onError: (errors) => {
                 alert(Object.values(errors).flat().join(', '));
+            }
+        });
+    };
+
+    const openInvoiceModal = (product) => {
+        setSelectedProduct(product);
+        setInvoiceData({
+            quantity: '',
+            unit_price: product.price || '',
+            total_amount: '',
+            invoice_date: new Date().toISOString().split('T')[0],
+            due_date: '',
+            notes: '',
+        });
+        setInvoiceError('');
+        setShowInvoiceModal(true);
+    };
+
+    const closeInvoiceModal = () => {
+        setShowInvoiceModal(false);
+        setSelectedProduct(null);
+        setInvoiceData({
+            quantity: '',
+            unit_price: '',
+            total_amount: '',
+            invoice_date: new Date().toISOString().split('T')[0],
+            due_date: '',
+            notes: '',
+        });
+        setInvoiceError('');
+    };
+
+    const handleInvoiceSubmit = () => {
+        setInvoiceError('');
+
+        if (!invoiceData.quantity || parseInt(invoiceData.quantity) <= 0) {
+            setInvoiceError('Quantity is required and must be greater than 0');
+            return;
+        }
+        if (!invoiceData.unit_price || parseFloat(invoiceData.unit_price) < 0) {
+            setInvoiceError('Unit price is required');
+            return;
+        }
+        if (!invoiceData.total_amount || parseFloat(invoiceData.total_amount) < 0) {
+            setInvoiceError('Total amount is required');
+            return;
+        }
+        if (!invoiceData.invoice_date) {
+            setInvoiceError('Invoice date is required');
+            return;
+        }
+
+        setIsCreatingInvoice(true);
+        
+        router.post('/invoices', {
+            product_id: selectedProduct.id,
+            quantity: parseInt(invoiceData.quantity),
+            unit_price: parseFloat(invoiceData.unit_price),
+            total_amount: parseFloat(invoiceData.total_amount),
+            invoice_date: invoiceData.invoice_date,
+            due_date: invoiceData.due_date || null,
+            notes: invoiceData.notes || null,
+        }, {
+            onSuccess: () => {
+                setIsCreatingInvoice(false);
+                closeInvoiceModal();
+                router.visit('/invoices');
+            },
+            onError: (errors) => {
+                setIsCreatingInvoice(false);
+                const errorMessage = Object.values(errors).flat().join(', ') || 'Failed to create invoice';
+                setInvoiceError(errorMessage);
             }
         });
     };
@@ -231,8 +320,8 @@ export default function Index({ products, filters, locations: initialLocations =
                                 <p className="mt-2 text-gray-600">Manage your product inventory and stock levels</p>
                             </div>
                             <div className="mt-4">
-                                <div className="text-2xl font-bold text-gray-900">{products.length}</div>
-                                <div className="text-sm text-gray-500">Total Products</div>
+                                <div className="text-2xl font-bold text-gray-900">{getAvailableProductsCount()}</div>
+                                <div className="text-sm text-gray-500">Available Products</div>
                             </div>
                         </div>
                     </div>
@@ -247,7 +336,7 @@ export default function Index({ products, filters, locations: initialLocations =
                                 Product Filters
                             </h3>
                             <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
-                                {products.length} products found
+                                {getAvailableProductsCount()} available products
                             </span>
                         </div>
 
@@ -533,46 +622,78 @@ export default function Index({ products, filters, locations: initialLocations =
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <div className="flex space-x-2">
-                                                    <Link href={`/products/${product.id}`} className="text-blue-600 hover:text-blue-900 transition-colors">
+                                                <div className="flex items-center space-x-2">
+                                                    <Link href={`/products/${product.id}`} className="text-blue-600 hover:text-blue-900 transition-colors" title="View">
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                         </svg>
                                                     </Link>
-                                                    <Link href={`/products/${product.id}/edit`} className="text-indigo-600 hover:text-indigo-900 transition-colors">
+                                                    <Link href={`/products/${product.id}/edit`} className="text-indigo-600 hover:text-indigo-900 transition-colors" title="Edit">
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
                                                     </Link>
-                                                    <button 
-                                                        onClick={() => openSellModal(product)}
-                                                        className="text-purple-600 hover:text-purple-900 transition-colors"
-                                                        title="Sell Product"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => openDamagedModal(product)}
-                                                        className="text-red-600 hover:text-red-900 transition-colors"
-                                                        title="Mark as Damaged"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0v2m-2-2h4m-11-7h18M5 11h14V7H5v4zm0 6h14v-4H5v4z" />
-                                                        </svg>
-                                                    </button>
-                                                    <Link href={`/reservations/create?product_id=${product.id}`} className="text-green-600 hover:text-green-900 transition-colors" title="Create Reservation">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                        </svg>
-                                                    </Link>
-                                                    <button onClick={() => router.delete(`/products/${product.id}`)} className="text-red-600 hover:text-red-900 transition-colors">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                        </svg>
-                                                    </button>
+                                                    <div className="relative">
+                                                        <button
+                                                            onClick={() => setOpenMenuId(openMenuId === product.id ? null : product.id)}
+                                                            className="text-gray-600 hover:text-gray-900 transition-colors p-1"
+                                                            title="More actions"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                                                            </svg>
+                                                        </button>
+                                                        {openMenuId === product.id && (
+                                                            <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        openSellModal(product);
+                                                                        setOpenMenuId(null);
+                                                                    }}
+                                                                    className="block w-full text-left px-4 py-2 hover:bg-purple-50 text-purple-600 text-sm"
+                                                                >
+                                                                    💰 Sell
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        openDamagedModal(product);
+                                                                        setOpenMenuId(null);
+                                                                    }}
+                                                                    className="block w-full text-left px-4 py-2 hover:bg-orange-50 text-orange-600 text-sm"
+                                                                >
+                                                                    ⚠️ Damaged
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        openInvoiceModal(product);
+                                                                        setOpenMenuId(null);
+                                                                    }}
+                                                                    className="block w-full text-left px-4 py-2 hover:bg-yellow-50 text-yellow-600 text-sm"
+                                                                >
+                                                                    📄 Invoice
+                                                                </button>
+                                                                <Link
+                                                                    href={`/reservations/create?product_id=${product.id}`}
+                                                                    className="block w-full text-left px-4 py-2 hover:bg-green-50 text-green-600 text-sm"
+                                                                    onClick={() => setOpenMenuId(null)}
+                                                                >
+                                                                    📦 Reserve
+                                                                </Link>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (window.confirm('Are you sure you want to delete this product?')) {
+                                                                            router.delete(`/products/${product.id}`);
+                                                                        }
+                                                                        setOpenMenuId(null);
+                                                                    }}
+                                                                    className="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm border-t"
+                                                                >
+                                                                    🗑️ Delete
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>
@@ -864,6 +985,153 @@ export default function Index({ products, filters, locations: initialLocations =
                                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
                             >
                                 Mark Damaged
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Invoice Modal */}
+            {showInvoiceModal && selectedProduct && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        {/* Modal Header */}
+                        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-yellow-50 to-amber-50 sticky top-0">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-lg font-semibold text-gray-900">Create Invoice</h2>
+                                    <p className="text-sm text-gray-600 mt-1">{selectedProduct.name}</p>
+                                </div>
+                                <button
+                                    onClick={closeInvoiceModal}
+                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="px-6 py-4 space-y-3">
+                            {/* Error Message */}
+                            {invoiceError && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                    <p className="text-sm text-red-800">{invoiceError}</p>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* Quantity */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Quantity <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={invoiceData.quantity}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, quantity: e.target.value })}
+                                        placeholder="0"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors text-sm"
+                                    />
+                                </div>
+
+                                {/* Unit Price */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Unit Price <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={invoiceData.unit_price}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, unit_price: e.target.value })}
+                                        placeholder="0.00"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors text-sm"
+                                    />
+                                </div>
+
+                                {/* Invoice Date */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Invoice Date <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={invoiceData.invoice_date}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, invoice_date: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors text-sm"
+                                    />
+                                </div>
+
+                                {/* Total Amount */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Total Amount <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={invoiceData.total_amount}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, total_amount: e.target.value })}
+                                        placeholder="0.00"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors text-sm"
+                                    />
+                                </div>
+
+                                {/* Due Date */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Due Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={invoiceData.due_date}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, due_date: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Notes */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Notes
+                                </label>
+                                <textarea
+                                    value={invoiceData.notes}
+                                    onChange={(e) => setInvoiceData({ ...invoiceData, notes: e.target.value })}
+                                    placeholder="Invoice notes..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors text-sm"
+                                    rows="3"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl flex space-x-3 justify-end">
+                            <button
+                                onClick={closeInvoiceModal}
+                                disabled={isCreatingInvoice}
+                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleInvoiceSubmit}
+                                disabled={isCreatingInvoice}
+                                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center space-x-2"
+                            >
+                                {isCreatingInvoice && (
+                                    <svg className="animate-spin h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                )}
+                                <span>{isCreatingInvoice ? 'Creating...' : 'Create Invoice'}</span>
                             </button>
                         </div>
                     </div>

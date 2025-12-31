@@ -32,8 +32,12 @@ class ProductController extends Controller
             $query->where('location', $request->location);
         }
 
+        // Only show products with quantity greater than 0
+        $query->where('quantity', '>', 0);
+
         $products = $query->get();
         $locations = Product::distinct()->pluck('location')->filter()->values()->toArray();
+        // Reservations are just for information, not for reducing product quantity
         $reservations = Reservation::where('status', 'pending')->orWhere('status', 'confirmed')->get();
 
         return Inertia::render('Products/Index', [
@@ -145,6 +149,15 @@ class ProductController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     */
+    public function destroy(Product $product)
+    {
+        $product->delete();
+        return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
+    }
+
+    /**
+     * Update product location.
      */
     public function updateLocation(Request $request, Product $product)
     {
