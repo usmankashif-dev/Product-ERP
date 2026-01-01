@@ -5,7 +5,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 export default function Index({ products, filters, locations: initialLocations = [], reservations = [] }) {
     const { data, setData, get } = useForm({
         name: filters.name || '',
-        size: filters.size || '',
         color: filters.color || '',
         location: filters.location || '',
     });
@@ -115,8 +114,8 @@ export default function Index({ products, filters, locations: initialLocations =
     };
 
     const getAvailableProductsCount = () => {
-        // Count only products that have available quantity (not fully reserved)
-        return products.filter(product => getAvailableQuantity(product.id) > 0).length;
+        // Count all products
+        return products.length;
     };
 
     const openSellModal = (product) => {
@@ -365,7 +364,7 @@ export default function Index({ products, filters, locations: initialLocations =
                         </div>
 
                         <form onSubmit={handleFilter} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <label className="block text-sm font-medium text-gray-700">Product Name</label>
                                     <div className="relative">
@@ -380,16 +379,6 @@ export default function Index({ products, filters, locations: initialLocations =
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                         </svg>
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-gray-700">Size</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Filter by size..."
-                                        value={data.size}
-                                        onChange={(e) => setData('size', e.target.value)}
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors bg-white"
-                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="block text-sm font-medium text-gray-700">Color</label>
@@ -500,12 +489,11 @@ export default function Index({ products, filters, locations: initialLocations =
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Info</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {products.filter(product => getAvailableQuantity(product.id) > 0).map((product, index) => (
+                                    {products.map((product, index) => (
                                         <tr key={product.id} className="hover:bg-blue-50 transition-all duration-200 hover:shadow-md border-l-4 border-l-transparent hover:border-l-blue-500 animate-slideUp" style={{animationDelay: `${index * 50}ms`}}>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
@@ -529,9 +517,6 @@ export default function Index({ products, filters, locations: initialLocations =
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">
                                                     <div className="flex items-center space-x-2">
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                            Size: {product.size}
-                                                        </span>
                                                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
                                                             Color: {product.color}
                                                         </span>
@@ -646,23 +631,6 @@ export default function Index({ products, filters, locations: initialLocations =
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm">
-                                                {product.client_name || product.client_phone || product.client_address ? (
-                                                    <div className="space-y-1">
-                                                        {product.client_name && (
-                                                            <p className="font-medium text-gray-900">{product.client_name}</p>
-                                                        )}
-                                                        {product.client_phone && (
-                                                            <p className="text-gray-600 text-xs">📞 {product.client_phone}</p>
-                                                        )}
-                                                        {product.client_address && (
-                                                            <p className="text-gray-600 text-xs">📍 {product.client_address.substring(0, 30)}{product.client_address.length > 30 ? '...' : ''}</p>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-gray-400 italic text-xs">No client info</p>
-                                                )}
-                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex items-center space-x-2">
                                                     <Link href={`/products/${product.id}`} className="text-blue-600 hover:text-blue-900 transition-colors" title="View">
@@ -676,66 +644,26 @@ export default function Index({ products, filters, locations: initialLocations =
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
                                                     </Link>
-                                                    <div className="relative">
-                                                        <button
-                                                            onClick={() => setOpenMenuId(openMenuId === product.id ? null : product.id)}
-                                                            className="text-gray-600 hover:text-gray-900 transition-colors p-1"
-                                                            title="More actions"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                                                            </svg>
-                                                        </button>
-                                                        {openMenuId === product.id && (
-                                                            <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        openSellModal(product);
-                                                                        setOpenMenuId(null);
-                                                                    }}
-                                                                    className="block w-full text-left px-4 py-2 hover:bg-purple-50 text-purple-600 text-sm"
-                                                                >
-                                                                    💰 Sell
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        openDamagedModal(product);
-                                                                        setOpenMenuId(null);
-                                                                    }}
-                                                                    className="block w-full text-left px-4 py-2 hover:bg-orange-50 text-orange-600 text-sm"
-                                                                >
-                                                                    ⚠️ Damaged
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        openInvoiceModal(product);
-                                                                        setOpenMenuId(null);
-                                                                    }}
-                                                                    className="block w-full text-left px-4 py-2 hover:bg-yellow-50 text-yellow-600 text-sm"
-                                                                >
-                                                                    📄 Invoice
-                                                                </button>
-                                                                <Link
-                                                                    href={`/reservations/create?product_id=${product.id}`}
-                                                                    className="block w-full text-left px-4 py-2 hover:bg-green-50 text-green-600 text-sm"
-                                                                    onClick={() => setOpenMenuId(null)}
-                                                                >
-                                                                    📦 Reserve
-                                                                </Link>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        if (window.confirm('Are you sure you want to delete this product?')) {
-                                                                            router.delete(`/products/${product.id}`);
-                                                                        }
-                                                                        setOpenMenuId(null);
-                                                                    }}
-                                                                    className="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm border-t"
-                                                                >
-                                                                    🗑️ Delete
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            openDamagedModal(product);
+                                                        }}
+                                                        className="text-orange-600 hover:text-orange-900 transition-colors"
+                                                        title="Damaged"
+                                                    >
+                                                        ⚠️
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (window.confirm('Are you sure you want to delete this product?')) {
+                                                                router.delete(`/products/${product.id}`);
+                                                            }
+                                                        }}
+                                                        className="text-red-600 hover:text-red-900 transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        🗑️
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>

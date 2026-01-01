@@ -20,12 +20,12 @@ class SalesController extends Controller
             'product_id' => 'required|exists:products,id',
             'reservation_id' => 'nullable|exists:reservations,id',
             'quantity' => 'required|integer|min:1',
-            'price_per_unit' => 'nullable|numeric|min:0',
+            'price_per_unit' => 'required|numeric|min:0',
             'total_amount' => 'required|numeric|min:0',
             'date' => 'required|date_format:Y-m-d',
-            'payment_method' => 'nullable|in:cash,credit_card,debit_card,bank_transfer,check',
+            'payment_method' => 'required|in:cash,credit_card,debit_card,bank_transfer,check',
             'platform' => 'nullable|string|max:255',
-            'customer_name' => 'nullable|string|max:255',
+            'customer_name' => 'required|string|max:255',
             'customer_phone' => 'nullable|string|max:255',
             'customer_address' => 'nullable|string',
         ]);
@@ -83,9 +83,9 @@ class SalesController extends Controller
                 }
             });
 
-            return redirect()->back()->with('success', 'Product sold successfully. Stock and reservations updated.');
+            return redirect()->route('sales.index')->with('success', 'Product sold successfully. Stock and reservations updated.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+            return redirect()->route('sales.index')->withErrors(['error' => $e->getMessage()]);
         }
     }
 

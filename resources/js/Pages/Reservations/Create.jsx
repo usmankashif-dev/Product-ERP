@@ -10,7 +10,6 @@ export default function Create({ products, selectedProduct, locations: initialLo
     const { data, setData, post, errors } = useForm({
         product_id: selectedProduct ? selectedProduct.id : '',
         quantity: 1,
-        size: '',
         location: '',
         date: '',
         client_name: '',
@@ -58,6 +57,42 @@ export default function Create({ products, selectedProduct, locations: initialLo
                                 </div>
                             )}
                             <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="border-b border-gray-200 pb-6">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Client Information</h3>
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Name</label>
+                                        <input
+                                            type="text"
+                                            value={data.client_name}
+                                            onChange={(e) => setData('client_name', e.target.value)}
+                                            placeholder="Client name"
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                        />
+                                        {errors.client_name && <div className="text-red-500">{errors.client_name}</div>}
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Phone</label>
+                                        <input
+                                            type="text"
+                                            value={data.client_phone}
+                                            onChange={(e) => setData('client_phone', e.target.value)}
+                                            placeholder="Client phone"
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                        />
+                                        {errors.client_phone && <div className="text-red-500">{errors.client_phone}</div>}
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Address</label>
+                                        <textarea
+                                            value={data.client_address}
+                                            onChange={(e) => setData('client_address', e.target.value)}
+                                            placeholder="Client address"
+                                            className="w-full border border-gray-300 rounded px-3 py-2 resize-none"
+                                            rows="3"
+                                        ></textarea>
+                                        {errors.client_address && <div className="text-red-500">{errors.client_address}</div>}
+                                    </div>
+                                </div>
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Product</label>
                                     <select
@@ -68,7 +103,7 @@ export default function Create({ products, selectedProduct, locations: initialLo
                                         <option value="">Select Product</option>
                                         {products.map((product) => (
                                             <option key={product.id} value={product.id}>
-                                                {product.name} - {product.size} - {product.color} (Qty: {product.quantity})
+                                                {product.name} - {product.color} (Qty: {product.quantity})
                                             </option>
                                         ))}
                                     </select>
@@ -84,16 +119,6 @@ export default function Create({ products, selectedProduct, locations: initialLo
                                         min="0"
                                     />
                                     {errors.quantity && <div className="text-red-500">{errors.quantity}</div>}
-                                </div>
-                                <div className="mb-4">
-                                    <label className="block text-gray-700">Size (optional)</label>
-                                    <input
-                                        type="text"
-                                        value={data.size}
-                                        onChange={(e) => setData('size', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2"
-                                    />
-                                    {errors.size && <div className="text-red-500">{errors.size}</div>}
                                 </div>
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Location (optional)</label>
@@ -171,42 +196,6 @@ export default function Create({ products, selectedProduct, locations: initialLo
                                         className="w-full border border-gray-300 rounded px-3 py-2"
                                     />
                                     {errors.date && <div className="text-red-500">{errors.date}</div>}
-                                </div>
-                                <div className="border-t border-gray-200 pt-6">
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Client Information</h3>
-                                    <div className="mb-4">
-                                        <label className="block text-gray-700">Name</label>
-                                        <input
-                                            type="text"
-                                            value={data.client_name}
-                                            onChange={(e) => setData('client_name', e.target.value)}
-                                            placeholder="Client name"
-                                            className="w-full border border-gray-300 rounded px-3 py-2"
-                                        />
-                                        {errors.client_name && <div className="text-red-500">{errors.client_name}</div>}
-                                    </div>
-                                    <div className="mb-4">
-                                        <label className="block text-gray-700">Phone</label>
-                                        <input
-                                            type="text"
-                                            value={data.client_phone}
-                                            onChange={(e) => setData('client_phone', e.target.value)}
-                                            placeholder="Client phone"
-                                            className="w-full border border-gray-300 rounded px-3 py-2"
-                                        />
-                                        {errors.client_phone && <div className="text-red-500">{errors.client_phone}</div>}
-                                    </div>
-                                    <div className="mb-4">
-                                        <label className="block text-gray-700">Address</label>
-                                        <textarea
-                                            value={data.client_address}
-                                            onChange={(e) => setData('client_address', e.target.value)}
-                                            placeholder="Client address"
-                                            className="w-full border border-gray-300 rounded px-3 py-2 resize-none"
-                                            rows="3"
-                                        ></textarea>
-                                        {errors.client_address && <div className="text-red-500">{errors.client_address}</div>}
-                                    </div>
                                 </div>
                                 <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm">Create Reservation</button>
                             </form>

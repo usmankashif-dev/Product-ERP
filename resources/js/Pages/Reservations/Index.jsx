@@ -7,7 +7,6 @@ export default function Index({ reservations, filters, locations = [] }) {
         product: filters.product || '',
         client: filters.client || '',
         status: filters.status || '',
-        size: filters.size || '',
     });
 
     const [editingStatus, setEditingStatus] = useState(null);
@@ -55,7 +54,6 @@ export default function Index({ reservations, filters, locations = [] }) {
             product: '',
             client: '',
             status: '',
-            size: '',
         });
         router.get('/reservations', {}, { preserveState: true });
     };
@@ -435,16 +433,6 @@ export default function Index({ reservations, filters, locations = [] }) {
                                         <option value="cancelled">Cancelled</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Size</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Filter by size..."
-                                        value={data.size}
-                                        onChange={(e) => setData('size', e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                                    />
-                                </div>
                             </div>
 
                             <div className="flex gap-2 justify-end">
@@ -493,7 +481,7 @@ export default function Index({ reservations, filters, locations = [] }) {
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -514,11 +502,6 @@ export default function Index({ reservations, filters, locations = [] }) {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
                                                         {reservation.quantity} units
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                                        {reservation.size || 'N/A'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -619,57 +602,24 @@ export default function Index({ reservations, filters, locations = [] }) {
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                             </svg>
                                                         </Link>
-                                                        <div className="relative">
-                                                            <button
-                                                                onClick={() => setOpenMenuId(openMenuId === reservation.id ? null : reservation.id)}
-                                                                className="text-gray-600 hover:text-gray-900 transition-colors p-1"
-                                                                title="More actions"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                                                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                                                                </svg>
-                                                            </button>
-                                                            {openMenuId === reservation.id && (
-                                                                <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            openSellModal(reservation);
-                                                                            setOpenMenuId(null);
-                                                                        }}
-                                                                        className="block w-full text-left px-4 py-2 hover:bg-green-50 text-green-600 text-sm"
-                                                                    >
-                                                                        💰 Sell
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            openDamagedModal(reservation);
-                                                                            setOpenMenuId(null);
-                                                                        }}
-                                                                        className="block w-full text-left px-4 py-2 hover:bg-orange-50 text-orange-600 text-sm"
-                                                                    >
-                                                                        ⚠️ Damaged
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            openInvoiceModal(reservation);
-                                                                            setOpenMenuId(null);
-                                                                        }}
-                                                                        className="block w-full text-left px-4 py-2 hover:bg-yellow-50 text-yellow-600 text-sm"
-                                                                    >
-                                                                        📄 Invoice
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            handleDelete(reservation.id);
-                                                                            setOpenMenuId(null);
-                                                                        }}
-                                                                        className="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 text-sm border-t"
-                                                                    >
-                                                                        🗑️ Delete
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                openDamagedModal(reservation);
+                                                            }}
+                                                            className="text-orange-600 hover:text-orange-900 transition-colors"
+                                                            title="Damaged"
+                                                        >
+                                                            ⚠️
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                handleDelete(reservation.id);
+                                                            }}
+                                                            className="text-red-600 hover:text-red-900 transition-colors"
+                                                            title="Delete"
+                                                        >
+                                                            🗑️
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>

@@ -20,10 +20,6 @@ class ProductController extends Controller
             $query->where('name', 'like', '%' . $request->name . '%');
         }
 
-        if ($request->has('size') && $request->size) {
-            $query->where('size', $request->size);
-        }
-
         if ($request->has('color') && $request->color) {
             $query->where('color', $request->color);
         }
@@ -32,9 +28,6 @@ class ProductController extends Controller
             $query->where('location', $request->location);
         }
 
-        // Only show products with quantity greater than 0
-        $query->where('quantity', '>', 0);
-
         $products = $query->get();
         $locations = Product::distinct()->pluck('location')->filter()->values()->toArray();
         // Reservations are just for information, not for reducing product quantity
@@ -42,7 +35,7 @@ class ProductController extends Controller
 
         return Inertia::render('Products/Index', [
             'products' => $products,
-            'filters' => $request->only(['name', 'size', 'color', 'location']),
+            'filters' => $request->only(['name', 'color', 'location']),
             'locations' => $locations,
             'reservations' => $reservations
         ]);
@@ -69,7 +62,6 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'size' => 'required|string|max:255',
             'color' => 'required|string|max:255',
             'location' => 'required|string|max:255',
             'quantity' => 'required|integer|min:0',
@@ -77,9 +69,6 @@ class ProductController extends Controller
             'date' => 'nullable|date',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'client_name' => 'nullable|string|max:255',
-            'client_phone' => 'nullable|string|max:255',
-            'client_address' => 'nullable|string',
         ]);
 
         $data = $request->all();
@@ -125,7 +114,6 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'size' => 'required|string|max:255',
             'color' => 'required|string|max:255',
             'location' => 'required|string|max:255',
             'quantity' => 'required|integer|min:0',
@@ -133,9 +121,6 @@ class ProductController extends Controller
             'date' => 'nullable|date',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'client_name' => 'nullable|string|max:255',
-            'client_phone' => 'nullable|string|max:255',
-            'client_address' => 'nullable|string',
         ]);
 
         $data = $request->all();

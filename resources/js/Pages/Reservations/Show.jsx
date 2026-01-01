@@ -34,7 +34,7 @@ export default function Show({ reservation }) {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <strong>Product:</strong> {reservation.product.name} ({reservation.product.size}, {reservation.product.color})
+                                    <strong>Product:</strong> {reservation.product.name} ({reservation.product.color})
                                 </div>
                                 <div>
                                     <strong>Client:</strong> {reservation.client_name || reservation.client?.name || 'N/A'} {(reservation.client_phone || reservation.client?.phone) && <span>({reservation.client_phone || reservation.client?.phone})</span>}
@@ -46,9 +46,6 @@ export default function Show({ reservation }) {
                                 )}
                                 <div>
                                     <strong>Quantity:</strong> {reservation.quantity}
-                                </div>
-                                <div>
-                                    <strong>Size:</strong> {reservation.size || 'N/A'}
                                 </div>
                                 <div>
                                     <strong>Status:</strong> {reservation.status}

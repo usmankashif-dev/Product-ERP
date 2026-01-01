@@ -40,14 +40,6 @@ class ReservationController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Filter by size
-        if ($request->filled('size')) {
-            $query->where('size', 'like', '%' . $request->size . '%');
-        }
-
-        // Only show reservations with quantity > 0
-        $query->where('quantity', '>', 0);
-
         $reservations = $query->get()->map(function ($reservation) {
             // Fill in product_name from product if not set (for old reservations)
             if (!$reservation->product_name && $reservation->product) {

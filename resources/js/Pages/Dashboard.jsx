@@ -322,15 +322,12 @@ export default function Dashboard({
                     )}
 
                     {/* Quick Links */}
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Link href="/products" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-sm hover:shadow-md hover:scale-105">
                             📦 Manage Products
                         </Link>
                         <Link href="/reservations" className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-sm hover:shadow-md hover:scale-105">
                             📝 Manage Reservations
-                        </Link>
-                        <Link href="/sales-history" className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-sm hover:shadow-md hover:scale-105">
-                            📋 Sales History
                         </Link>
                     </div>
                 </div>

@@ -9,7 +9,6 @@ export default function Create({ locations: initialLocations = [] }) {
 
     const { data, setData, post, errors } = useForm({
         name: '',
-        size: '',
         color: '',
         location: '',
         date: '',
@@ -17,9 +16,6 @@ export default function Create({ locations: initialLocations = [] }) {
         price: '',
         description: '',
         image: null,
-        client_name: '',
-        client_phone: '',
-        client_address: '',
     });
 
     const handleLocationChange = (e) => {
@@ -92,34 +88,19 @@ export default function Create({ locations: initialLocations = [] }) {
                                     {errors.name && <div className="text-red-500 text-sm mt-1">{errors.name}</div>}
                                 </div>
 
-                                {/* Size and Color - Two Column */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Size <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.size}
-                                            onChange={(e) => setData('size', e.target.value)}
-                                            placeholder="e.g., Large, Medium"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                        />
-                                        {errors.size && <div className="text-red-500 text-sm mt-1">{errors.size}</div>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Color <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.color}
-                                            onChange={(e) => setData('color', e.target.value)}
-                                            placeholder="e.g., Red, Blue"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                        />
-                                        {errors.color && <div className="text-red-500 text-sm mt-1">{errors.color}</div>}
-                                    </div>
+                                {/* Color Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Color <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={data.color}
+                                        onChange={(e) => setData('color', e.target.value)}
+                                        placeholder="e.g., Red, Blue"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    />
+                                    {errors.color && <div className="text-red-500 text-sm mt-1">{errors.color}</div>}
                                 </div>
 
                                 {/* Location Field */}
@@ -235,56 +216,6 @@ export default function Create({ locations: initialLocations = [] }) {
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                                     ></textarea>
                                     {errors.description && <div className="text-red-500 text-sm mt-1">{errors.description}</div>}
-                                </div>
-
-                                {/* Client Information Section */}
-                                <div className="border-t pt-6 mt-6">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Client Information</h3>
-                                    
-                                    {/* Client Name Field */}
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Client Name <span className="text-gray-400">(Optional)</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.client_name}
-                                            onChange={(e) => setData('client_name', e.target.value)}
-                                            placeholder="Enter client name"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                        />
-                                        {errors.client_name && <div className="text-red-500 text-sm mt-1">{errors.client_name}</div>}
-                                    </div>
-
-                                    {/* Client Phone and Address - Two Column */}
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Contact Number <span className="text-gray-400">(Optional)</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.client_phone}
-                                                onChange={(e) => setData('client_phone', e.target.value)}
-                                                placeholder="e.g., +1234567890"
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                            />
-                                            {errors.client_phone && <div className="text-red-500 text-sm mt-1">{errors.client_phone}</div>}
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Address <span className="text-gray-400">(Optional)</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.client_address}
-                                                onChange={(e) => setData('client_address', e.target.value)}
-                                                placeholder="Enter client address"
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                            />
-                                            {errors.client_address && <div className="text-red-500 text-sm mt-1">{errors.client_address}</div>}
-                                        </div>
-                                    </div>
                                 </div>
 
                                 {/* Image Field */}

@@ -10,7 +10,6 @@ export default function Edit({ reservation, products, locations: initialLocation
     const { data, setData, put, errors } = useForm({
         product_id: reservation.product_id || '',
         quantity: reservation.quantity || 1,
-        size: reservation.size || '',
         location: reservation.location || '',
         date: reservation.date || '',
         status: reservation.status || 'pending',
@@ -65,7 +64,7 @@ export default function Edit({ reservation, products, locations: initialLocation
                                         <option value="">Select Product</option>
                                         {products.map((product) => (
                                             <option key={product.id} value={product.id}>
-                                                {product.name} - {product.size} - {product.color} (Qty: {product.quantity})
+                                                {product.name} - {product.color} (Qty: {product.quantity})
                                             </option>
                                         ))}
                                     </select>

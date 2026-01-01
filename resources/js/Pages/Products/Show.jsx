@@ -51,9 +51,6 @@ export default function Show({ product }) {
                                     <strong>Name:</strong> {product.name}
                                 </div>
                                 <div>
-                                    <strong>Size:</strong> {product.size}
-                                </div>
-                                <div>
                                     <strong>Color:</strong> {product.color}
                                 </div>
                                 <div>
