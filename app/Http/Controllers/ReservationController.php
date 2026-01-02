@@ -87,6 +87,7 @@ class ReservationController extends Controller
             'client_name' => 'required|string|max:255',
             'client_phone' => 'nullable|string|max:255',
             'client_address' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $product = Product::find($request->product_id);
@@ -110,20 +111,29 @@ class ReservationController extends Controller
 
         try {
             DB::transaction(function () use ($request, $product, $existingReservation, $reservationDate) {
+                $imagePath = null;
+                if ($request->hasFile('image')) {
+                    $imagePath = $request->file('image')->store('reservations', 'public');
+                }
+
                 if ($existingReservation) {
                     // Update existing reservation
                     $oldQuantity = $existingReservation->quantity;
                     $newQuantity = $oldQuantity + (int) $request->quantity;
-                    $existingReservation->update([
+                    $updateData = [
                         'quantity' => $newQuantity,
                         'reserved_at' => now(), // Update timestamp
                         'client_name' => $request->client_name,
                         'client_phone' => $request->client_phone,
                         'client_address' => $request->client_address,
-                    ]);
+                    ];
+                    if ($imagePath) {
+                        $updateData['image'] = $imagePath;
+                    }
+                    $existingReservation->update($updateData);
                 } else {
                     // Create new reservation
-                    Reservation::create([
+                    $createData = [
                         'product_id' => $request->product_id,
                         'product_name' => $product->name,
                         'quantity' => (int) $request->quantity,
@@ -134,7 +144,11 @@ class ReservationController extends Controller
                         'client_name' => $request->client_name,
                         'client_phone' => $request->client_phone,
                         'client_address' => $request->client_address,
-                    ]);
+                    ];
+                    if ($imagePath) {
+                        $createData['image'] = $imagePath;
+                    }
+                    Reservation::create($createData);
                 }
             });
 
@@ -185,11 +199,13 @@ class ReservationController extends Controller
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:0',
             'size' => 'nullable|string|max:255',
+            'location' => 'nullable|string|max:255',
             'date' => 'nullable|date_format:Y-m-d',
             'status' => 'required|in:pending,confirmed,cancelled',
             'client_name' => 'required|string|max:255',
             'client_phone' => 'nullable|string|max:255',
             'client_address' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $newQuantity = intval($request->quantity);
@@ -197,9 +213,12 @@ class ReservationController extends Controller
 
         try {
             DB::transaction(function () use ($newQuantity, $newProductId, $request, $reservation) {
-                // Simply update the reservation without adjusting product quantities
-                // Available quantity is calculated as: product.quantity - sum(reservation quantities)
-                $reservation->update([
+                $imagePath = null;
+                if ($request->hasFile('image')) {
+                    $imagePath = $request->file('image')->store('reservations', 'public');
+                }
+
+                $updateData = [
                     'product_id' => $newProductId,
                     'product_name' => Product::find($newProductId)->name ?? 'Unknown',
                     'quantity' => $newQuantity,
@@ -210,7 +229,13 @@ class ReservationController extends Controller
                     'client_name' => $request->client_name,
                     'client_phone' => $request->client_phone,
                     'client_address' => $request->client_address,
-                ]);
+                ];
+
+                if ($imagePath) {
+                    $updateData['image'] = $imagePath;
+                }
+
+                $reservation->update($updateData);
             });
 
             return redirect()->route('reservations.index')->with('success', 'Reservation updated successfully.');

@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Show({ reservation }) {
+    useEffect(() => {
+        console.log('Reservation data:', reservation);
+        console.log('Image attribute:', reservation.image);
+    }, [reservation]);
+
     return (
         <AuthenticatedLayout
             header={
@@ -25,12 +30,28 @@ export default function Show({ reservation }) {
                                     <li className="text-gray-900">{reservation.product.name}</li>
                                 </ol>
                             </nav>
-                            <div className="flex justify-between items-center mb-4">
+                            <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold">Reservation Details</h2>
                                 <Link href="/reservations" className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                                     Back to Reservations
                                 </Link>
                             </div>
+
+                            {/* Image Section */}
+                            {reservation.image && (
+                                <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                    <strong className="block mb-3">Photo:</strong>
+                                    <img 
+                                        src={`/storage/${reservation.image}`} 
+                                        alt="Reservation" 
+                                        className="max-w-md h-auto rounded-lg shadow-md object-cover"
+                                        onError={(e) => {
+                                            console.log('Image failed to load from:', `/storage/${reservation.image}`);
+                                            e.target.style.display = 'none';
+                                        }}
+                                    />
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>

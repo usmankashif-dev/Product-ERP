@@ -6,6 +6,7 @@ export default function Create({ products, selectedProduct, locations: initialLo
     const [showNewLocation, setShowNewLocation] = useState(false);
     const [newLocationName, setNewLocationName] = useState('');
     const [locations, setLocations] = useState(initialLocations.length > 0 ? initialLocations : ['warehouse', 'shop', 'other']);
+    const [imagePreview, setImagePreview] = useState(null);
     
     const { data, setData, post, errors } = useForm({
         product_id: selectedProduct ? selectedProduct.id : '',
@@ -15,11 +16,26 @@ export default function Create({ products, selectedProduct, locations: initialLo
         client_name: '',
         client_phone: '',
         client_address: '',
+        image: null,
     });
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setData('image', file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/reservations');
+        post('/reservations', {
+            forceFormData: true,
+        });
     };
 
     return (
@@ -196,6 +212,23 @@ export default function Create({ products, selectedProduct, locations: initialLo
                                         className="w-full border border-gray-300 rounded px-3 py-2"
                                     />
                                     {errors.date && <div className="text-red-500">{errors.date}</div>}
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Photo (optional)</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                    />
+                                    <p className="text-sm text-gray-500 mt-1">Supported formats: JPEG, PNG, JPG, GIF. Max size: 2MB</p>
+                                    {errors.image && <div className="text-red-500">{errors.image}</div>}
+                                    {imagePreview && (
+                                        <div className="mt-3">
+                                            <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                                            <img src={imagePreview} alt="Preview" className="h-32 rounded border border-gray-300" />
+                                        </div>
+                                    )}
                                 </div>
                                 <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm">Create Reservation</button>
                             </form>

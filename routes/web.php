@@ -8,6 +8,7 @@ use App\Http\Controllers\SalesHistoryController;
 use App\Http\Controllers\DamageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ReturnController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -49,6 +50,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
     Route::get('/sales/create', [SalesController::class, 'create'])->name('sales.create');
     Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
+    Route::get('/returns', [ReturnController::class, 'index'])->name('returns.index');
+    Route::get('/returns/create', [ReturnController::class, 'create'])->name('returns.create');
+    Route::post('/returns', [ReturnController::class, 'store'])->name('returns.store');
+    Route::get('/returns/{productReturn}', [ReturnController::class, 'show'])->name('returns.show');
+    Route::get('/returns/{productReturn}/edit', [ReturnController::class, 'edit'])->name('returns.edit');
+    Route::put('/returns/{productReturn}', [ReturnController::class, 'update'])->name('returns.update');
+    Route::delete('/returns/{productReturn}', [ReturnController::class, 'destroy'])->name('returns.destroy');
 });
 
 require __DIR__.'/auth.php';

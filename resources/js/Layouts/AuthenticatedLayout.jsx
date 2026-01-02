@@ -80,6 +80,16 @@ export default function AuthenticatedLayout({ header, children }) {
                                     </svg>
                                     <span>Sales</span>
                                 </NavLink>
+                                <NavLink
+                                    href="/returns"
+                                    active={window.location.pathname.startsWith('/returns')}
+                                    className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 11l3 3L22 4m-10-2a10 10 0 110 20 10 10 0 010-20z" />
+                                    </svg>
+                                    <span>Returns & Damage</span>
+                                </NavLink>
                             </div>
                         </div>
 

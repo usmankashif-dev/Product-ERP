@@ -79,11 +79,11 @@ export default function Index({ invoices }) {
                         </div>
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-l-4 border-l-green-500 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-slideUp" style={{animationDelay: '50ms'}}>
                             <div className="text-sm text-gray-600 font-medium">Paid</div>
-                            <div className="text-3xl font-bold text-green-600 mt-2">${getPaidAmount()}</div>
+                            <div className="text-3xl font-bold text-green-600 mt-2">PKR {getPaidAmount()}</div>
                         </div>
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-l-4 border-l-orange-500 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-slideUp" style={{animationDelay: '100ms'}}>
                             <div className="text-sm text-gray-600 font-medium">Total Amount</div>
-                            <div className="text-3xl font-bold text-orange-600 mt-2">${getTotalAmount()}</div>
+                            <div className="text-3xl font-bold text-orange-600 mt-2">PKR {getTotalAmount()}</div>
                         </div>
                     </div>
 
@@ -178,7 +178,7 @@ export default function Index({ invoices }) {
                                                     {invoice.client?.name || 'N/A'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    ${parseFloat(invoice.total_amount).toFixed(2)}
+                                                    PKR {parseFloat(invoice.total_amount).toFixed(2)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                     {new Date(invoice.invoice_date).toLocaleDateString()}

@@ -64,10 +64,13 @@ class SalesController extends Controller
                 ];
                 Sale::create($saleData);
 
-                // If selling from a reservation, only deduct from reservation quantity
-                // (product stock was already deducted when reservation was created)
+                // If selling from a reservation, deduct from product quantity
+                // (product stock was not deducted when reservation was created)
                 if (!empty($validated['reservation_id'])) {
                     $reservation = Reservation::findOrFail($validated['reservation_id']);
+                    
+                    // Deduct the sold quantity from the product
+                    $product->decrement('quantity', $validated['quantity']);
                     
                     // Deduct the sold quantity from the reservation
                     $newQuantity = $reservation->quantity - $validated['quantity'];

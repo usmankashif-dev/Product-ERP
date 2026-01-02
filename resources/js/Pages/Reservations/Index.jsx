@@ -110,17 +110,19 @@ export default function Index({ reservations, filters, locations = [] }) {
 
     const openSellModal = (reservation) => {
         setSelectedReservation(reservation);
-        // Auto-fill price from product if available
+        // Auto-fill with reservation full quantity and product price
         const productPrice = reservation.product?.price || '';
+        const totalAmount = reservation.quantity * (productPrice || 0);
         setSellData({
             quantity: reservation.quantity.toString(),
             price_per_unit: productPrice.toString(),
-            total_amount: '',
+            total_amount: totalAmount.toString(),
             date: new Date().toISOString().split('T')[0],
             payment_method: reservation.payment_method || 'cash',
             customer_name: '',
             customer_phone: '',
             customer_address: '',
+            platform: '',
         });
         setSellError('');
         setShowSellModal(true);
@@ -147,28 +149,16 @@ export default function Index({ reservations, filters, locations = [] }) {
     const handleSellSubmit = () => {
         setSellError('');
 
-        if (!sellData.quantity || parseInt(sellData.quantity) <= 0) {
-            setSellError('Quantity is required and must be greater than 0');
-            return;
-        }
-        if (!sellData.total_amount || parseFloat(sellData.total_amount) < 0) {
-            setSellError('Total amount is required');
-            return;
-        }
         if (!sellData.date) {
             setSellError('Date is required');
             return;
         }
-        if (!sellData.customer_name || !sellData.customer_name.trim()) {
-            setSellError('Customer name is required');
+        if (!sellData.payment_method) {
+            setSellError('Payment method is required');
             return;
         }
-        if (!sellData.customer_phone || !sellData.customer_phone.trim()) {
-            setSellError('Customer phone is required');
-            return;
-        }
-        if (!sellData.customer_address || !sellData.customer_address.trim()) {
-            setSellError('Customer address is required');
+        if (!sellData.platform) {
+            setSellError('Platform is required');
             return;
         }
 
@@ -186,38 +176,18 @@ export default function Index({ reservations, filters, locations = [] }) {
             date: sellData.date,
             payment_method: sellData.payment_method,
             platform: sellData.platform,
-            customer_name: sellData.customer_name,
-            customer_phone: sellData.customer_phone,
-            customer_address: sellData.customer_address,
+            customer_name: selectedReservation.client_name,
+            customer_phone: selectedReservation.client_phone,
+            customer_address: selectedReservation.client_address,
         }, {
             onSuccess: () => {
                 setIsSelling(false);
                 closeSellModal();
                 
-                // If sold quantity equals reserved quantity, delete the reservation
-                if (soldQty === reservedQty) {
-                    router.delete(`/reservations/${selectedReservation.id}`, {
-                        preserveState: true
-                    });
-                } else {
-                    // Otherwise, update the reservation with remaining quantity via API
-                    fetch(`/api/reservations/${selectedReservation.id}/quantity`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                        },
-                        body: JSON.stringify({ quantity: reservedQty - soldQty })
-                    }).then(response => {
-                        if (response.ok) {
-                            window.location.reload();
-                        } else {
-                            console.error('Failed to update reservation quantity');
-                        }
-                    }).catch(err => {
-                        console.error('Error updating reservation:', err);
-                    });
-                }
+                // Delete the reservation since we sold all of it
+                router.delete(`/reservations/${selectedReservation.id}`, {
+                    preserveState: true
+                });
             },
             onError: (errors) => {
                 setIsSelling(false);
@@ -478,6 +448,7 @@ export default function Index({ reservations, filters, locations = [] }) {
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                         <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photo</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
@@ -491,6 +462,17 @@ export default function Index({ reservations, filters, locations = [] }) {
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {reservations.map((reservation, index) => (
                                             <tr key={reservation.id} className="hover:bg-purple-50 transition-all duration-200 hover:shadow-md border-l-4 border-l-transparent hover:border-l-purple-500 animate-slideUp" style={{animationDelay: `${index * 50}ms`}}>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {reservation.image ? (
+                                                        <img className="h-12 w-12 rounded-lg object-cover" src={`/storage/${reservation.image}`} alt="Reservation" />
+                                                    ) : (
+                                                        <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center">
+                                                            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">{reservation.product_name || reservation.product?.name || 'Product'}</div>
                                                     <div className="text-xs text-gray-500">ID: {reservation.product?.id || 'N/A'}</div>
@@ -593,9 +575,28 @@ export default function Index({ reservations, filters, locations = [] }) {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center space-x-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                openSellModal(reservation);
+                                                            }}
+                                                            className="text-green-600 hover:text-green-900 transition-colors"
+                                                            title="Mark as Sold"
+                                                        >
+                                                            ✅
+                                                        </button>
+                                                        <Link
+                                                            href={`/reservations/${reservation.id}`}
+                                                            className="text-blue-600 hover:text-blue-900 transition-colors"
+                                                            title="View"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                            </svg>
+                                                        </Link>
                                                         <Link
                                                             href={`/reservations/${reservation.id}/edit`}
-                                                            className="text-blue-600 hover:text-blue-900 transition-colors"
+                                                            className="text-indigo-600 hover:text-indigo-900 transition-colors"
                                                             title="Edit"
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -661,12 +662,40 @@ export default function Index({ reservations, filters, locations = [] }) {
                         </div>
 
                         {/* Modal Body */}
-                        <div className="px-6 py-4 space-y-3">
-                            {/* Reservation Info */}
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                                <p className="text-sm text-gray-600">Reservation Details:</p>
-                                <p className="text-lg font-semibold text-green-900 mt-1">{selectedReservation.quantity} units</p>
-                                <p className="text-xs text-gray-500 mt-1">Product: {selectedReservation.product_name || selectedReservation.product?.name || 'Product'}</p>
+                        <div className="px-6 py-4 space-y-4">
+                            {/* Reservation Summary */}
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <p className="text-sm font-semibold text-gray-700 mb-3">Reservation Summary</p>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-sm text-gray-600">Product:</span>
+                                        <span className="text-sm font-medium text-gray-900">{selectedReservation.product_name || selectedReservation.product?.name || 'Product'}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-sm text-gray-600">Quantity:</span>
+                                        <span className="text-sm font-medium text-gray-900">{selectedReservation.quantity} units</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-sm text-gray-600">Price/Unit:</span>
+                                        <span className="text-sm font-medium text-gray-900">PKR {parseFloat(sellData.price_per_unit).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="flex justify-between bg-blue-100 px-2 py-1 rounded">
+                                        <span className="text-sm text-gray-600">Total Amount:</span>
+                                        <span className="text-sm font-bold text-blue-900">PKR {parseFloat(sellData.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="flex justify-between pt-2 border-t border-blue-200">
+                                        <span className="text-sm text-gray-600">Customer:</span>
+                                        <span className="text-sm font-medium text-gray-900">{selectedReservation.client_name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-sm text-gray-600">Phone:</span>
+                                        <span className="text-sm font-medium text-gray-900">{selectedReservation.client_phone}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-sm text-gray-600">Address:</span>
+                                        <span className="text-sm font-medium text-gray-900">{selectedReservation.client_address}</span>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Error Message */}
@@ -676,77 +705,8 @@ export default function Index({ reservations, filters, locations = [] }) {
                                 </div>
                             )}
 
-                            {/* Customer Information Section */}
-                            <div className="border-t pt-3">
-                                <p className="text-sm font-semibold text-gray-700 mb-3">Customer Information</p>
-                                <div className="space-y-3">
-                                    {/* Customer Name */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Name <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={sellData.customer_name}
-                                            onChange={(e) => setSellData({ ...sellData, customer_name: e.target.value })}
-                                            placeholder="Customer name"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
-                                        />
-                                    </div>
-
-                                    {/* Customer Phone */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Phone <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={sellData.customer_phone}
-                                            onChange={(e) => setSellData({ ...sellData, customer_phone: e.target.value })}
-                                            placeholder="Phone number"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
-                                        />
-                                    </div>
-
-                                    {/* Customer Address */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Address <span className="text-red-500">*</span>
-                                        </label>
-                                        <textarea
-                                            value={sellData.customer_address}
-                                            onChange={(e) => setSellData({ ...sellData, customer_address: e.target.value })}
-                                            placeholder="Customer address"
-                                            rows="2"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Two Column Grid */}
-                            <div className="grid grid-cols-2 gap-3">
-                                {/* Quantity Field */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Quantity <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max={selectedReservation.quantity}
-                                        value={sellData.quantity}
-                                        onChange={(e) => {
-                                            const qty = e.target.value ? parseFloat(e.target.value) : 0;
-                                            const price = sellData.price_per_unit ? parseFloat(sellData.price_per_unit) : 0;
-                                            const total = qty * price;
-                                            setSellData({ ...sellData, quantity: e.target.value, total_amount: total.toString() });
-                                        }}
-                                        placeholder="Qty"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
-                                    />
-                                </div>
-
+                            {/* Sale Details Grid */}
+                            <div className="space-y-3">
                                 {/* Date Field */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -760,43 +720,6 @@ export default function Index({ reservations, filters, locations = [] }) {
                                     />
                                 </div>
 
-                                {/* Price Per Unit Field */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Price/Unit <span className="text-gray-400">(Opt.)</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={sellData.price_per_unit}
-                                        onChange={(e) => {
-                                            const price = e.target.value ? parseFloat(e.target.value) : 0;
-                                            const qty = sellData.quantity ? parseFloat(sellData.quantity) : 0;
-                                            const total = qty * price;
-                                            setSellData({ ...sellData, price_per_unit: e.target.value, total_amount: total.toString() });
-                                        }}
-                                        placeholder="Price"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
-                                    />
-                                </div>
-
-                                {/* Total Amount Field */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Total Amount <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={sellData.total_amount}
-                                        readOnly
-                                        placeholder="Total"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm cursor-not-allowed"
-                                    />
-                                </div>
-
                                 {/* Payment Method Field */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -807,6 +730,7 @@ export default function Index({ reservations, filters, locations = [] }) {
                                         onChange={(e) => setSellData({ ...sellData, payment_method: e.target.value })}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
                                     >
+                                        <option value="">Select</option>
                                         <option value="cash">Cash</option>
                                         <option value="credit_card">Credit Card</option>
                                         <option value="debit_card">Debit Card</option>

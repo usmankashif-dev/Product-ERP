@@ -6,8 +6,9 @@ export default function Edit({ reservation, products, locations: initialLocation
     const [showNewLocation, setShowNewLocation] = React.useState(false);
     const [newLocationName, setNewLocationName] = React.useState('');
     const [locations, setLocations] = React.useState(initialLocations.length > 0 ? initialLocations : ['warehouse', 'shop', 'other']);
+    const [imagePreview, setImagePreview] = React.useState(reservation.image ? `/storage/${reservation.image}` : null);
     
-    const { data, setData, put, errors } = useForm({
+    const { data, setData, post, errors } = useForm({
         product_id: reservation.product_id || '',
         quantity: reservation.quantity || 1,
         location: reservation.location || '',
@@ -16,14 +17,26 @@ export default function Edit({ reservation, products, locations: initialLocation
         client_name: reservation.client_name || '',
         client_phone: reservation.client_phone || '',
         client_address: reservation.client_address || '',
+        image: null,
+        _method: 'PUT',
     });
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setData('image', file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(`/reservations/${reservation.id}`, {
-            onSuccess: () => {
-                window.location.reload();
-            }
+        post(`/reservations/${reservation.id}`, {
+            forceFormData: true,
         });
     };
 
@@ -216,6 +229,23 @@ export default function Edit({ reservation, products, locations: initialLocation
                                         ></textarea>
                                         {errors.client_address && <div className="text-red-500">{errors.client_address}</div>}
                                     </div>
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Photo (optional)</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                    />
+                                    <p className="text-sm text-gray-500 mt-1">Supported formats: JPEG, PNG, JPG, GIF. Max size: 2MB</p>
+                                    {errors.image && <div className="text-red-500">{errors.image}</div>}
+                                    {imagePreview && (
+                                        <div className="mt-3">
+                                            <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                                            <img src={imagePreview} alt="Preview" className="h-32 rounded border border-gray-300" />
+                                        </div>
+                                    )}
                                 </div>
                                 <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm">Update Reservation</button>
                             </form>

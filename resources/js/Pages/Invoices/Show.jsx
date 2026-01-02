@@ -181,8 +181,8 @@ export default function Show({ invoice }) {
                                             {invoice.product?.name || 'Product'}
                                         </td>
                                         <td className="py-4 px-4 text-right text-gray-900">{invoice.quantity}</td>
-                                        <td className="py-4 px-4 text-right text-gray-900">${parseFloat(invoice.unit_price).toFixed(2)}</td>
-                                        <td className="py-4 px-4 text-right text-gray-900 font-semibold">${parseFloat(invoice.total_amount).toFixed(2)}</td>
+                                        <td className="py-4 px-4 text-right text-gray-900">PKR {parseFloat(invoice.unit_price).toFixed(2)}</td>
+                                        <td className="py-4 px-4 text-right text-gray-900 font-semibold">PKR {parseFloat(invoice.total_amount).toFixed(2)}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -195,15 +195,15 @@ export default function Show({ invoice }) {
                             <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                                 <div className="flex justify-between mb-3">
                                     <span className="text-gray-600">Subtotal:</span>
-                                    <span className="text-gray-900 font-medium">${parseFloat(invoice.total_amount).toFixed(2)}</span>
+                                    <span className="text-gray-900 font-medium">PKR {parseFloat(invoice.total_amount).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between mb-3 pb-3 border-b border-gray-300">
                                     <span className="text-gray-600">Tax (0%):</span>
-                                    <span className="text-gray-900 font-medium">$0.00</span>
+                                    <span className="text-gray-900 font-medium">PKR 0.00</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-lg font-bold text-gray-900">Total:</span>
-                                    <span className="text-2xl font-bold text-blue-600">${parseFloat(invoice.total_amount).toFixed(2)}</span>
+                                    <span className="text-2xl font-bold text-blue-600">PKR {parseFloat(invoice.total_amount).toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>

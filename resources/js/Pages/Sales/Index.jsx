@@ -74,7 +74,7 @@ export default function Index({ sales }) {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-green-600 text-sm font-medium">Total Revenue</p>
-                                        <p className="text-3xl font-bold text-green-900 mt-2">${totalRevenue.toFixed(2)}</p>
+                                        <p className="text-3xl font-bold text-green-900 mt-2">PKR {totalRevenue.toFixed(2)}</p>
                                     </div>
                                     <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
                                         <span className="text-2xl">💰</span>
@@ -178,8 +178,8 @@ export default function Index({ sales }) {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{sale.quantity}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${parseFloat(sale.price_per_unit).toFixed(2)}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">${parseFloat(sale.total_amount).toFixed(2)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">PKR {parseFloat(sale.price_per_unit).toFixed(2)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">PKR {parseFloat(sale.total_amount).toFixed(2)}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {new Date(sale.date).toLocaleDateString()}
                                         </td>

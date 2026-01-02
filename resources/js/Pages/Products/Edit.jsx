@@ -7,7 +7,7 @@ export default function Edit({ product, locations: initialLocations = [] }) {
     const [newLocationName, setNewLocationName] = useState('');
     const [locations, setLocations] = useState(initialLocations.length > 0 ? initialLocations : ['warehouse', 'shop', 'other']);
 
-    const { data, setData, put, errors } = useForm({
+    const { data, setData, post, errors } = useForm({
         name: product.name || '',
         color: product.color || '',
         location: product.location || '',
@@ -16,6 +16,7 @@ export default function Edit({ product, locations: initialLocations = [] }) {
         price: product.price || '',
         description: product.description || '',
         image: null,
+        _method: 'PUT',
     });
 
     const handleLocationChange = (e) => {
@@ -43,7 +44,9 @@ export default function Edit({ product, locations: initialLocations = [] }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(`/products/${product.id}`);
+        post(`/products/${product.id}`, {
+            forceFormData: true,
+        });
     };
 
     return (
