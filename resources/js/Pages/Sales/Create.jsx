@@ -22,16 +22,7 @@ export default function Create({ products }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Ensure total_amount is calculated
-        const total = calculateTotal();
-        setData('total_amount', total);
-        // Use post with the updated data
-        post('/sales', {
-            data: {
-                ...data,
-                total_amount: total,
-            }
-        });
+        post('/sales');
     };
 
     const calculateTotal = () => {
@@ -40,8 +31,11 @@ export default function Create({ products }) {
         return (quantity * price).toFixed(2);
     };
 
-    const updateTotal = () => {
-        setData('total_amount', calculateTotal());
+    const updateTotal = (newQuantity = null, newPrice = null) => {
+        const qty = newQuantity !== null ? newQuantity : (parseFloat(data.quantity) || 0);
+        const price = newPrice !== null ? newPrice : (parseFloat(data.price_per_unit) || 0);
+        const total = (qty * price).toFixed(2);
+        setData('total_amount', total);
     };
 
     const handleProductChange = (e) => {
@@ -150,8 +144,9 @@ export default function Create({ products }) {
                                         type="number"
                                         value={data.quantity}
                                         onChange={(e) => {
-                                            setData('quantity', e.target.value === '' ? '' : parseInt(e.target.value));
-                                            updateTotal();
+                                            const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                                            setData('quantity', value);
+                                            updateTotal(value);
                                         }}
                                         className="w-full border border-gray-300 rounded px-3 py-2"
                                         min="1"
@@ -165,8 +160,9 @@ export default function Create({ products }) {
                                         step="0.01"
                                         value={data.price_per_unit}
                                         onChange={(e) => {
-                                            setData('price_per_unit', e.target.value);
-                                            updateTotal();
+                                            const value = e.target.value;
+                                            setData('price_per_unit', value);
+                                            updateTotal(null, parseFloat(value));
                                         }}
                                         placeholder="0.00"
                                         className="w-full border border-gray-300 rounded px-3 py-2"

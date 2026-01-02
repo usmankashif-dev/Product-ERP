@@ -2,16 +2,15 @@ import React, { useState } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Create({ products = [], clients = [] }) {
-    const [selectedProduct, setSelectedProduct] = useState(null);
+export default function Create({ sales = [], clients = [] }) {
+    const [selectedSale, setSelectedSale] = useState(null);
     const [showNewClient, setShowNewClient] = useState(false);
 
     const { data, setData, post, errors } = useForm({
+        sale_id: '',
         product_id: '',
         product_name: '',
-        quantity: '',
         damaged: false,
-        refund_money: false,
         client_id: '',
         client_name: '',
         client_phone: '',
@@ -20,17 +19,24 @@ export default function Create({ products = [], clients = [] }) {
         image: null,
     });
 
-    const handleProductChange = (e) => {
-        const productId = e.target.value;
-        setData('product_id', productId);
+    const handleSaleChange = (e) => {
+        const saleId = e.target.value;
+        setData('sale_id', saleId);
         
-        if (productId === 'new') {
-            setShowNewClient(true);
-        } else {
-            const product = products.find(p => p.id.toString() === productId);
-            if (product) {
-                setSelectedProduct(product);
-                setData('product_name', product.name);
+        if (saleId) {
+            const sale = sales.find(s => s.id.toString() === saleId);
+            if (sale) {
+                setSelectedSale(sale);
+                setData({
+                    ...data,
+                    sale_id: saleId,
+                    product_id: sale.product_id,
+                    product_name: sale.product?.name || '',
+                    client_id: sale.client_id || '',
+                    client_name: sale.customer_name || '',
+                    client_phone: sale.customer_phone || '',
+                    client_address: sale.customer_address || '',
+                });
             }
         }
     };
@@ -90,40 +96,24 @@ export default function Create({ products = [], clients = [] }) {
                             </nav>
 
                             <form onSubmit={handleSubmit} className="space-y-6">
-                                {/* Product Selection */}
+                                {/* Sale Selection */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Product <span className="text-red-500">*</span>
+                                        Select Sale <span className="text-red-500">*</span>
                                     </label>
                                     <select
-                                        value={data.product_id}
-                                        onChange={handleProductChange}
+                                        value={data.sale_id}
+                                        onChange={handleSaleChange}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     >
-                                        <option value="">Select Product</option>
-                                        {products.map((product) => (
-                                            <option key={product.id} value={product.id}>
-                                                {product.name} - {product.color}
+                                        <option value="">Select Sale</option>
+                                        {sales.map((sale) => (
+                                            <option key={sale.id} value={sale.id}>
+                                                {sale.product?.name} - {sale.customer_name} - Qty: {sale.quantity} - Rs. {sale.total_amount}
                                             </option>
                                         ))}
                                     </select>
-                                    {errors.product_id && <div className="text-red-500 text-sm mt-1">{errors.product_id}</div>}
-                                </div>
-
-                                {/* Quantity Field */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Quantity <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={data.quantity}
-                                        onChange={(e) => setData('quantity', e.target.value)}
-                                        placeholder="Enter quantity"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                    />
-                                    {errors.quantity && <div className="text-red-500 text-sm mt-1">{errors.quantity}</div>}
+                                    {errors.sale_id && <div className="text-red-500 text-sm mt-1">{errors.sale_id}</div>}
                                 </div>
 
                                 {/* Damaged Checkbox */}
@@ -137,20 +127,6 @@ export default function Create({ products = [], clients = [] }) {
                                     />
                                     <label htmlFor="damaged" className="ml-2 block text-sm font-medium text-gray-700 cursor-pointer">
                                         Item is Damaged
-                                    </label>
-                                </div>
-
-                                {/* Refund Money Checkbox */}
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        id="refund_money"
-                                        checked={data.refund_money}
-                                        onChange={(e) => setData('refund_money', e.target.checked)}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-                                    />
-                                    <label htmlFor="refund_money" className="ml-2 block text-sm font-medium text-gray-700 cursor-pointer">
-                                        Refund Money
                                     </label>
                                 </div>
 

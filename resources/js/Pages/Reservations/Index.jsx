@@ -452,7 +452,7 @@ export default function Index({ reservations, filters, locations = [] }) {
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -485,6 +485,13 @@ export default function Index({ reservations, filters, locations = [] }) {
                                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
                                                         {reservation.quantity} units
                                                     </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-semibold text-gray-900">
+                                                        <span className="text-orange-600">Rs. {parseFloat(reservation.paid_amount || 0).toFixed(2)}</span>
+                                                        <span className="text-gray-500 mx-1">/</span>
+                                                        <span className="text-green-600">Rs. {parseFloat(reservation.total_amount || 0).toFixed(2)}</span>
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     {editingLocation === reservation.id ? (

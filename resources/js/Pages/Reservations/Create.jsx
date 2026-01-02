@@ -11,6 +11,8 @@ export default function Create({ products, selectedProduct, locations: initialLo
     const { data, setData, post, errors } = useForm({
         product_id: selectedProduct ? selectedProduct.id : '',
         quantity: 1,
+        paid_amount: 0,
+        total_amount: 0,
         location: '',
         date: '',
         client_name: '',
@@ -18,6 +20,30 @@ export default function Create({ products, selectedProduct, locations: initialLo
         client_address: '',
         image: null,
     });
+
+    const handleProductChange = (e) => {
+        const productId = e.target.value;
+        setData('product_id', productId);
+        
+        // Find the selected product and calculate total amount
+        const product = products.find(p => p.id == productId);
+        if (product) {
+            const total = product.price * data.quantity;
+            setData('total_amount', total);
+        }
+    };
+
+    const handleQuantityChange = (value) => {
+        const qty = value === '' ? 1 : parseInt(value);
+        setData('quantity', qty);
+        
+        // Recalculate total amount
+        const product = products.find(p => p.id == data.product_id);
+        if (product) {
+            const total = product.price * qty;
+            setData('total_amount', total);
+        }
+    };
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -113,13 +139,13 @@ export default function Create({ products, selectedProduct, locations: initialLo
                                     <label className="block text-gray-700">Product</label>
                                     <select
                                         value={data.product_id}
-                                        onChange={(e) => setData('product_id', e.target.value)}
+                                        onChange={handleProductChange}
                                         className="w-full border border-gray-300 rounded px-3 py-2"
                                     >
                                         <option value="">Select Product</option>
                                         {products.map((product) => (
                                             <option key={product.id} value={product.id}>
-                                                {product.name} - {product.color} (Qty: {product.quantity})
+                                                {product.name} - {product.color} (Qty: {product.quantity}) - Rs. {product.price}
                                             </option>
                                         ))}
                                     </select>
@@ -130,11 +156,30 @@ export default function Create({ products, selectedProduct, locations: initialLo
                                     <input
                                         type="number"
                                         value={data.quantity}
-                                        onChange={(e) => setData('quantity', e.target.value === '' ? '' : parseInt(e.target.value))}
+                                        onChange={(e) => handleQuantityChange(e.target.value)}
                                         className="w-full border border-gray-300 rounded px-3 py-2"
                                         min="0"
                                     />
                                     {errors.quantity && <div className="text-red-500">{errors.quantity}</div>}
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 font-semibold">Total Amount</label>
+                                    <div className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-50 text-gray-700">
+                                        Rs. {data.total_amount.toFixed(2)}
+                                    </div>
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Paid Amount</label>
+                                    <input
+                                        type="number"
+                                        value={data.paid_amount}
+                                        onChange={(e) => setData('paid_amount', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                    />
+                                    {errors.paid_amount && <div className="text-red-500">{errors.paid_amount}</div>}
                                 </div>
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Location (optional)</label>
