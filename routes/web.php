@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/reservations/{reservation}/mark-damaged', [DamageController::class, 'markReservationDamaged'])->name('reservations.markDamaged');
     Route::patch('/api/reservations/{reservation}/quantity', [ReservationController::class, 'updateQuantity'])->name('reservations.updateQuantity');
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
     Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
     Route::patch('/invoices/{invoice}/status', [InvoiceController::class, 'updateStatus'])->name('invoices.updateStatus');

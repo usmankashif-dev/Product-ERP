@@ -18,6 +18,18 @@ class Invoice extends Model
         'due_date',
         'status',
         'notes',
+        'customer_name',
+        'customer_address',
+        'customer_phone',
+        'location',
+        'image',
+        'discount',
+        'tax',
+        'payment_method',
+        'received_amount',
+        'subtotal',
+        'total_invoice',
+        'balance',
     ];
 
     protected $casts = [
@@ -25,6 +37,12 @@ class Invoice extends Model
         'due_date' => 'date',
         'unit_price' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'tax' => 'decimal:2',
+        'received_amount' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'total_invoice' => 'decimal:2',
+        'balance' => 'decimal:2',
     ];
 
     public function product()

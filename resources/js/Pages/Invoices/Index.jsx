@@ -89,6 +89,15 @@ export default function Index({ invoices }) {
 
                     {/* Filter & Search */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Invoices</h3>
+                            <Link
+                                href="/invoices/create"
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                            >
+                                + Add New Invoice
+                            </Link>
+                        </div>
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold text-gray-900">Filter by Status</h3>
                             <div className="flex gap-2">
