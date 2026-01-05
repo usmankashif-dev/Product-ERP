@@ -15,6 +15,7 @@ export default function Create({ clients, products }) {
         discount: 0,
         tax: 0,
         payment_method: 'cash',
+        bank_name: '',
         received_amount: 0,
     });
 
@@ -275,6 +276,7 @@ export default function Create({ clients, products }) {
         data.append('discount', formData.discount);
         data.append('tax', formData.tax);
         data.append('payment_method', formData.payment_method);
+        data.append('bank_name', formData.bank_name);
         data.append('received_amount', formData.received_amount);
         data.append('subtotal', subtotal);
         data.append('total', total);
@@ -616,27 +618,85 @@ export default function Create({ clients, products }) {
                                     <select
                                         name="payment_method"
                                         value={formData.payment_method}
-                                        onChange={handleInputChange}
+                                        onChange={(e) => {
+                                            handleInputChange(e);
+                                            if (e.target.value !== 'bank_transfer') {
+                                                setFormData(prev => ({ ...prev, bank_name: '' }));
+                                            }
+                                        }}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="cash">Cash</option>
                                         <option value="bank_transfer">Bank Transfer</option>
                                         <option value="credit_card">Credit Card</option>
+                                        <option value="debit_card">Debit Card</option>
                                         <option value="check">Check</option>
+                                        <option value="online_transfer">Online Transfer</option>
+                                        <option value="mobile_wallet">Mobile Wallet</option>
+                                        <option value="other">Other</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Received Amount</label>
-                                    <input
-                                        type="number"
-                                        name="received_amount"
-                                        value={formData.received_amount}
-                                        onChange={handleInputChange}
-                                        min="0"
-                                        step="0.01"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
+                                {formData.payment_method === 'bank_transfer' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Select Bank</label>
+                                        <select
+                                            name="bank_name"
+                                            value={formData.bank_name}
+                                            onChange={handleInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="">-- Choose a bank --</option>
+                                            <option value="HBL - Habib Bank Limited">HBL - Habib Bank Limited</option>
+                                            <option value="ABL - Allied Bank Limited">ABL - Allied Bank Limited</option>
+                                            <option value="UBL - United Bank Limited">UBL - United Bank Limited</option>
+                                            <option value="MCB - MCB Bank Limited">MCB - MCB Bank Limited</option>
+                                            <option value="NBP - National Bank of Pakistan">NBP - National Bank of Pakistan</option>
+                                            <option value="BOP - Bank of Punjab">BOP - Bank of Punjab</option>
+                                            <option value="Faysal Bank">Faysal Bank</option>
+                                            <option value="Askari Bank">Askari Bank</option>
+                                            <option value="SILK Bank">SILK Bank</option>
+                                            <option value="Jazz Bank">Jazz Bank</option>
+                                            <option value="Alfalah Bank">Alfalah Bank</option>
+                                            <option value="SBP - State Bank of Pakistan">SBP - State Bank of Pakistan</option>
+                                            <option value="Bank Al Falah">Bank Al Falah</option>
+                                            <option value="Habib Metropolitan Bank">Habib Metropolitan Bank</option>
+                                            <option value="KASB Bank">KASB Bank</option>
+                                            <option value="ICBC Bank">ICBC Bank</option>
+                                            <option value="Dubai Islamic Bank">Dubai Islamic Bank</option>
+                                            <option value="Meezan Bank">Meezan Bank</option>
+                                            <option value="Bank Islami Pakistan">Bank Islami Pakistan</option>
+                                            <option value="Other Banks">Other Banks</option>
+                                        </select>
+                                    </div>
+                                )}
+                                {formData.payment_method !== 'bank_transfer' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Received Amount</label>
+                                        <input
+                                            type="number"
+                                            name="received_amount"
+                                            value={formData.received_amount}
+                                            onChange={handleInputChange}
+                                            min="0"
+                                            step="0.01"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                )}
+                                {formData.payment_method === 'bank_transfer' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Received Amount</label>
+                                        <input
+                                            type="number"
+                                            name="received_amount"
+                                            value={formData.received_amount}
+                                            onChange={handleInputChange}
+                                            min="0"
+                                            step="0.01"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
 

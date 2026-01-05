@@ -84,9 +84,16 @@ class ReservationController extends Controller
             'size' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
             'date' => 'nullable|date_format:Y-m-d',
+            'sales_date' => 'nullable|date_format:Y-m-d',
+            'paid_amount' => 'nullable|numeric|min:0',
+            'total_amount' => 'nullable|numeric|min:0',
+            'discount_type' => 'nullable|in:amount,percentage',
+            'discount_value' => 'nullable|numeric|min:0',
             'client_name' => 'required|string|max:255',
             'client_phone' => 'nullable|string|max:255',
             'client_address' => 'nullable|string',
+            'payment_method' => 'nullable|in:cash,bank,credit_card,debit_card,check,online_transfer,mobile_wallet,other',
+            'bank_name' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -126,7 +133,18 @@ class ReservationController extends Controller
                         'client_name' => $request->client_name,
                         'client_phone' => $request->client_phone,
                         'client_address' => $request->client_address,
+                        'payment_method' => $request->filled('payment_method') ? $request->payment_method : 'cash',
+                        'bank_name' => $request->filled('bank_name') ? $request->bank_name : null,
                     ];
+                    if ($request->filled('paid_amount')) {
+                        $updateData['paid_amount'] = $request->paid_amount;
+                    }
+                    if ($request->filled('total_amount')) {
+                        $updateData['total_amount'] = $request->total_amount;
+                    }
+                    if ($request->filled('sales_date')) {
+                        $updateData['sales_date'] = $request->sales_date;
+                    }
                     if ($imagePath) {
                         $updateData['image'] = $imagePath;
                     }
@@ -140,11 +158,35 @@ class ReservationController extends Controller
                         'size' => $request->size,
                         'location' => $request->location,
                         'date' => $reservationDate,
+                        'paid_amount' => $request->filled('paid_amount') ? $request->paid_amount : 0,
+                        'total_amount' => $request->filled('total_amount') ? $request->total_amount : 0,
+                        'sales_date' => $request->filled('sales_date') ? $request->sales_date : null,
                         'reserved_at' => now(),
                         'client_name' => $request->client_name,
                         'client_phone' => $request->client_phone,
                         'client_address' => $request->client_address,
+                        'payment_method' => $request->filled('payment_method') ? $request->payment_method : 'cash',
+                        'bank_name' => $request->filled('bank_name') ? $request->bank_name : null,
                     ];
+
+                    // Calculate discount if provided
+                    if ($request->filled('discount_type') && $request->filled('discount_value')) {
+                        $createData['discount_type'] = $request->discount_type;
+                        $createData['discount_value'] = $request->discount_value;
+
+                        $totalAmount = $request->filled('total_amount') ? $request->total_amount : 0;
+                        $discountAmount = 0;
+
+                        if ($request->discount_type === 'amount') {
+                            $discountAmount = min($request->discount_value, $totalAmount);
+                        } elseif ($request->discount_type === 'percentage') {
+                            $discountAmount = ($totalAmount * $request->discount_value) / 100;
+                        }
+
+                        $createData['discount_amount'] = $discountAmount;
+                        $createData['final_amount'] = $totalAmount - $discountAmount;
+                    }
+
                     if ($imagePath) {
                         $createData['image'] = $imagePath;
                     }
@@ -201,6 +243,11 @@ class ReservationController extends Controller
             'size' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
             'date' => 'nullable|date_format:Y-m-d',
+            'sales_date' => 'nullable|date_format:Y-m-d',
+            'paid_amount' => 'nullable|numeric|min:0',
+            'total_amount' => 'nullable|numeric|min:0',
+            'discount_type' => 'nullable|in:amount,percentage',
+            'discount_value' => 'nullable|numeric|min:0',
             'status' => 'required|in:pending,confirmed,cancelled',
             'client_name' => 'required|string|max:255',
             'client_phone' => 'nullable|string|max:255',
@@ -225,11 +272,37 @@ class ReservationController extends Controller
                     'size' => $request->size,
                     'location' => $request->location,
                     'date' => $request->date,
+                    'sales_date' => $request->filled('sales_date') ? $request->sales_date : null,
+                    'paid_amount' => $request->filled('paid_amount') ? $request->paid_amount : $reservation->paid_amount,
+                    'total_amount' => $request->filled('total_amount') ? $request->total_amount : $reservation->total_amount,
                     'status' => $request->status,
                     'client_name' => $request->client_name,
                     'client_phone' => $request->client_phone,
                     'client_address' => $request->client_address,
                 ];
+
+                // Calculate discount if provided
+                if ($request->filled('discount_type') && $request->filled('discount_value')) {
+                    $updateData['discount_type'] = $request->discount_type;
+                    $updateData['discount_value'] = $request->discount_value;
+
+                    $totalAmount = $request->filled('total_amount') ? $request->total_amount : $reservation->total_amount;
+                    $discountAmount = 0;
+
+                    if ($request->discount_type === 'amount') {
+                        $discountAmount = min($request->discount_value, $totalAmount);
+                    } elseif ($request->discount_type === 'percentage') {
+                        $discountAmount = ($totalAmount * $request->discount_value) / 100;
+                    }
+
+                    $updateData['discount_amount'] = $discountAmount;
+                    $updateData['final_amount'] = $totalAmount - $discountAmount;
+                } else {
+                    $updateData['discount_type'] = null;
+                    $updateData['discount_value'] = null;
+                    $updateData['discount_amount'] = null;
+                    $updateData['final_amount'] = null;
+                }
 
                 if ($imagePath) {
                     $updateData['image'] = $imagePath;

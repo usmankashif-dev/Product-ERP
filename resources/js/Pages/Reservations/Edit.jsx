@@ -2,6 +2,29 @@ import React from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
+const PAKISTAN_BANKS = [
+    'HBL - Habib Bank Limited',
+    'ABL - Allied Bank Limited',
+    'UBL - United Bank Limited',
+    'MCB - MCB Bank Limited',
+    'NBP - National Bank of Pakistan',
+    'BOP - Bank of Punjab',
+    'Faysal Bank',
+    'Askari Bank',
+    'SILK Bank',
+    'Jazz Bank',
+    'Alfalah Bank',
+    'SBP - State Bank of Pakistan',
+    'Bank Al Falah',
+    'Habib Metropolitan Bank',
+    'KASB Bank',
+    'ICBC Bank',
+    'Dubai Islamic Bank',
+    'Meezan Bank',
+    'Bank Islami Pakistan',
+    'Other Banks'
+];
+
 export default function Edit({ reservation, products, locations: initialLocations = [] }) {
     const [showNewLocation, setShowNewLocation] = React.useState(false);
     const [newLocationName, setNewLocationName] = React.useState('');
@@ -13,10 +36,19 @@ export default function Edit({ reservation, products, locations: initialLocation
         quantity: reservation.quantity || 1,
         location: reservation.location || '',
         date: reservation.date || '',
+        sales_date: reservation.sales_date || '',
+        paid_amount: reservation.paid_amount || 0,
+        total_amount: reservation.total_amount || 0,
+        discount_type: reservation.discount_type || '',
+        discount_value: reservation.discount_value || '',
+        discount_amount: reservation.discount_amount || 0,
+        final_amount: reservation.final_amount || 0,
         status: reservation.status || 'pending',
         client_name: reservation.client_name || '',
         client_phone: reservation.client_phone || '',
         client_address: reservation.client_address || '',
+        payment_method: reservation.payment_method || 'cash',
+        bank_name: reservation.bank_name || '',
         image: null,
         _method: 'PUT',
     });
@@ -31,6 +63,27 @@ export default function Edit({ reservation, products, locations: initialLocation
             };
             reader.readAsDataURL(file);
         }
+    };
+
+    const handleDiscountChange = (type, value, totalAmount = null) => {
+        const amount = totalAmount !== null ? totalAmount : parseFloat(data.total_amount) || 0;
+        let discountAmount = 0;
+        let finalAmount = amount;
+
+        if (type && value) {
+            if (type === 'amount') {
+                discountAmount = Math.min(parseFloat(value), amount);
+            } else if (type === 'percentage') {
+                const percentage = Math.min(parseFloat(value), 100);
+                discountAmount = (amount * percentage) / 100;
+            }
+            finalAmount = amount - discountAmount;
+        }
+
+        setData('discount_type', type);
+        setData('discount_value', value);
+        setData('discount_amount', discountAmount);
+        setData('final_amount', finalAmount);
     };
 
     const handleSubmit = (e) => {
@@ -181,6 +234,129 @@ export default function Edit({ reservation, products, locations: initialLocation
                                     />
                                     {errors.date && <div className="text-red-500">{errors.date}</div>}
                                 </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Sales Date (optional)</label>
+                                    <input
+                                        type="date"
+                                        value={data.sales_date}
+                                        onChange={(e) => setData('sales_date', e.target.value)}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                    />
+                                    {errors.sales_date && <div className="text-red-500">{errors.sales_date}</div>}
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Total Amount</label>
+                                    <input
+                                        type="number"
+                                        value={data.total_amount}
+                                        onChange={(e) => setData('total_amount', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                    />
+                                    {errors.total_amount && <div className="text-red-500">{errors.total_amount}</div>}
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Paid Amount</label>
+                                    <input
+                                        type="number"
+                                        value={data.paid_amount}
+                                        onChange={(e) => setData('paid_amount', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                    />
+                                    {errors.paid_amount && <div className="text-red-500">{errors.paid_amount}</div>}
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Payment Method</label>
+                                    <select
+                                        value={data.payment_method}
+                                        onChange={(e) => {
+                                            setData('payment_method', e.target.value);
+                                            if (e.target.value !== 'bank') {
+                                                setData('bank_name', '');
+                                            }
+                                        }}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                    >
+                                        <option value="cash">Cash</option>
+                                        <option value="bank">Bank Transfer</option>
+                                        <option value="credit_card">Credit Card</option>
+                                        <option value="debit_card">Debit Card</option>
+                                        <option value="check">Check</option>
+                                        <option value="online_transfer">Online Transfer</option>
+                                        <option value="mobile_wallet">Mobile Wallet</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    {errors.payment_method && <div className="text-red-500">{errors.payment_method}</div>}
+                                </div>
+                                {data.payment_method === 'bank' && (
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Select Bank</label>
+                                        <select
+                                            value={data.bank_name}
+                                            onChange={(e) => setData('bank_name', e.target.value)}
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                        >
+                                            <option value="">-- Choose a bank --</option>
+                                            {PAKISTAN_BANKS.map((bank) => (
+                                                <option key={bank} value={bank}>
+                                                    {bank}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.bank_name && <div className="text-red-500">{errors.bank_name}</div>}
+                                    </div>
+                                )}
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Discount Type (optional)</label>
+                                    <select
+                                        value={data.discount_type}
+                                        onChange={(e) => {
+                                            if (e.target.value) {
+                                                handleDiscountChange(e.target.value, data.discount_value);
+                                            } else {
+                                                handleDiscountChange('', '');
+                                            }
+                                        }}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                    >
+                                        <option value="">No Discount</option>
+                                        <option value="amount">Fixed Amount (Rs.)</option>
+                                        <option value="percentage">Percentage (%)</option>
+                                    </select>
+                                    {errors.discount_type && <div className="text-red-500">{errors.discount_type}</div>}
+                                </div>
+                                {data.discount_type && (
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Discount Value {data.discount_type === 'percentage' ? '(%)' : '(Rs.)'}</label>
+                                        <input
+                                            type="number"
+                                            value={data.discount_value}
+                                            onChange={(e) => handleDiscountChange(data.discount_type, e.target.value)}
+                                            placeholder={data.discount_type === 'percentage' ? 'Enter percentage' : 'Enter amount'}
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                            min="0"
+                                            step="0.01"
+                                        />
+                                        {errors.discount_value && <div className="text-red-500">{errors.discount_value}</div>}
+                                        {data.discount_type && data.discount_value && (
+                                            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+                                                <div className="flex justify-between mb-1">
+                                                    <span className="text-sm text-gray-600">Discount Amount:</span>
+                                                    <span className="text-sm font-semibold">Rs. {parseFloat(data.discount_amount).toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-sm font-semibold text-gray-700">Final Amount:</span>
+                                                    <span className="text-sm font-bold text-green-900">Rs. {parseFloat(data.final_amount || data.total_amount).toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Status</label>
                                     <select

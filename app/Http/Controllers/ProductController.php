@@ -28,7 +28,11 @@ class ProductController extends Controller
             $query->where('location', $request->location);
         }
 
+        // Only get main products (not variations)
+        $query->whereNull('parent_product_id');
+        
         $products = $query->get();
+        
         $locations = Product::distinct()->pluck('location')->filter()->values()->toArray();
         // Reservations are just for information, not for reducing product quantity
         $reservations = Reservation::where('status', 'pending')->orWhere('status', 'confirmed')->get();
@@ -69,6 +73,10 @@ class ProductController extends Controller
             'date' => 'nullable|date',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'variations' => 'nullable|array',
+            'variations.*.name' => 'required|string|max:255',
+            'variations.*.color' => 'required|string|max:255',
+            'variations.*.quantity' => 'required|integer|min:1',
         ]);
 
         $data = $request->all();
@@ -77,7 +85,30 @@ class ProductController extends Controller
             $data['image'] = $request->file('image')->store('products', 'public');
         }
 
-        Product::create($data);
+        // Calculate total variation quantity
+        $variationQuantityTotal = 0;
+        if ($request->has('variations') && !empty($request->variations)) {
+            $variationQuantityTotal = array_sum(array_column($request->variations, 'quantity'));
+        }
+
+        // Add variation quantity to main product quantity
+        $data['quantity'] = (int)$data['quantity'] + $variationQuantityTotal;
+
+        // Create main product
+        $product = Product::create($data);
+
+        // Create variations if provided
+        if ($request->has('variations') && !empty($request->variations)) {
+            foreach ($request->variations as $variation) {
+                $product->variations()->create([
+                    'name' => $variation['name'],
+                    'color' => $variation['color'],
+                    'quantity' => $variation['quantity'],
+                    'location' => $data['location'],
+                    'date' => $data['date'] ?? null,
+                ]);
+            }
+        }
 
         return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
@@ -88,7 +119,7 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         return Inertia::render('Products/Show', [
-            'product' => $product
+            'product' => $product->load('variations')
         ]);
     }
 
@@ -135,7 +166,7 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        return redirect()->route('products.index')->with('success', 'Product updated successfully.');
+        return redirect()->route('products.edit', $product->id)->with('success', 'Product updated successfully.');
     }
 
     /**

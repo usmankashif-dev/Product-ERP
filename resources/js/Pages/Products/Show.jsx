@@ -72,6 +72,29 @@ export default function Show({ product }) {
                                     Edit Product
                                 </Link>
                             </div>
+
+                            {product.variations && product.variations.length > 0 && (
+                                <div className="mt-8 border-t border-gray-200 pt-8">
+                                    <h3 className="text-xl font-bold mb-4">Variations</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {product.variations.map((variation) => (
+                                            <div key={variation.id} className="border border-gray-300 rounded-lg p-4 shadow-sm">
+                                                <div className="space-y-2">
+                                                    <div>
+                                                        <strong>Name:</strong> {variation.name}
+                                                    </div>
+                                                    <div>
+                                                        <strong>Color:</strong> {variation.color}
+                                                    </div>
+                                                    <div>
+                                                        <strong>Quantity:</strong> {variation.quantity}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

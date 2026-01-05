@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Index({ sales }) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState('date');
+    const [sortBy, setSortBy] = useState('order_date');
     const [sortOrder, setSortOrder] = useState('desc');
 
     // Filter and sort sales
@@ -15,7 +15,7 @@ export default function Index({ sales }) {
                 sale.product?.name?.toLowerCase().includes(searchLower) ||
                 sale.product?.color?.toLowerCase().includes(searchLower) ||
                 sale.customer_name?.toLowerCase().includes(searchLower) ||
-                sale.date?.includes(searchTerm)
+                sale.order_date?.includes(searchTerm)
             );
         })
         .sort((a, b) => {
@@ -35,7 +35,7 @@ export default function Index({ sales }) {
             }
         });
 
-    const totalRevenue = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount), 0);
+    const totalRevenue = sales.reduce((sum, sale) => sum + parseFloat(sale.final_amount || sale.total_amount), 0);
     const totalUnits = sales.reduce((sum, sale) => sum + sale.quantity, 0);
 
     return (
@@ -128,7 +128,9 @@ export default function Index({ sales }) {
                                     onChange={(e) => setSortBy(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
-                                    <option value="date">Date</option>
+                                    <option value="order_date">Order Date</option>
+                                    <option value="dispatch_date">Dispatch Date</option>
+                                    <option value="delivered_date">Delivered Date</option>
                                     <option value="total_amount">Amount</option>
                                     <option value="quantity">Quantity</option>
                                     <option value="product_name">Product Name</option>
@@ -158,8 +160,9 @@ export default function Index({ sales }) {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Date</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -179,9 +182,20 @@ export default function Index({ sales }) {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{sale.quantity}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">PKR {parseFloat(sale.price_per_unit).toFixed(2)}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">PKR {parseFloat(sale.total_amount).toFixed(2)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                                            <div>
+                                                {sale.final_amount ? (
+                                                    <>
+                                                        <div className="text-xs text-gray-500 line-through">PKR {parseFloat(sale.total_amount).toFixed(2)}</div>
+                                                        <div className="text-sm font-bold">PKR {parseFloat(sale.final_amount).toFixed(2)}</div>
+                                                    </>
+                                                ) : (
+                                                    <div>PKR {parseFloat(sale.total_amount).toFixed(2)}</div>
+                                                )}
+                                            </div>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {new Date(sale.date).toLocaleDateString()}
+                                            {new Date(sale.order_date).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -191,6 +205,14 @@ export default function Index({ sales }) {
                                             }`}>
                                                 {sale.payment_method?.charAt(0).toUpperCase() + sale.payment_method?.slice(1)}
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                            <Link
+                                                href={`/returns/create?sale_id=${sale.id}`}
+                                                className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
+                                            >
+                                                Return
+                                            </Link>
                                         </td>
                                     </tr>
                                 ))}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, useForm, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Edit({ product, locations: initialLocations = [] }) {
@@ -44,9 +44,7 @@ export default function Edit({ product, locations: initialLocations = [] }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(`/products/${product.id}`, {
-            forceFormData: true,
-        });
+        post('/products/' + product.id);
     };
 
     return (

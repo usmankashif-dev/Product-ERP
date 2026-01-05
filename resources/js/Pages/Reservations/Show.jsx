@@ -74,6 +74,11 @@ export default function Show({ reservation }) {
                                 <div>
                                     <strong>Payment Method:</strong> {reservation.payment_method ? reservation.payment_method.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'N/A'}
                                 </div>
+                                {reservation.payment_method === 'bank' && reservation.bank_name && (
+                                    <div>
+                                        <strong>Bank:</strong> {reservation.bank_name}
+                                    </div>
+                                )}
                                 <div>
                                     <strong>Reserved At:</strong> {new Date(reservation.reserved_at).toLocaleString()}
                                 </div>

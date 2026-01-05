@@ -34,8 +34,16 @@ export default function Index({ reservations, filters, locations = [] }) {
         quantity: '',
         price_per_unit: '',
         total_amount: '',
-        date: new Date().toISOString().split('T')[0],
+        discount_type: '',
+        discount_value: '',
+        discount_amount: 0,
+        shipping_charges: 0,
+        final_amount: '',
+        order_date: new Date().toISOString().split('T')[0],
+        dispatch_date: '',
+        delivered_date: '',
         payment_method: 'cash',
+        bank_name: '',
         platform: '',
         customer_name: '',
         customer_phone: '',
@@ -117,7 +125,14 @@ export default function Index({ reservations, filters, locations = [] }) {
             quantity: reservation.quantity.toString(),
             price_per_unit: productPrice.toString(),
             total_amount: totalAmount.toString(),
-            date: new Date().toISOString().split('T')[0],
+            discount_type: '',
+            discount_value: '',
+            discount_amount: 0,
+            shipping_charges: 0,
+            final_amount: totalAmount.toString(),
+            order_date: new Date().toISOString().split('T')[0],
+            dispatch_date: '',
+            delivered_date: '',
             payment_method: reservation.payment_method || 'cash',
             customer_name: '',
             customer_phone: '',
@@ -136,7 +151,14 @@ export default function Index({ reservations, filters, locations = [] }) {
             quantity: '',
             price_per_unit: '',
             total_amount: '',
-            date: new Date().toISOString().split('T')[0],
+            discount_type: '',
+            discount_value: '',
+            discount_amount: 0,
+            shipping_charges: 0,
+            final_amount: '',
+            order_date: new Date().toISOString().split('T')[0],
+            dispatch_date: '',
+            delivered_date: '',
             payment_method: 'cash',
             platform: '',
             customer_name: '',
@@ -146,11 +168,38 @@ export default function Index({ reservations, filters, locations = [] }) {
         setSellError('');
     };
 
+    const handleDiscountChange = (type, value) => {
+        const totalAmount = parseFloat(sellData.total_amount) || 0;
+        const shipping = parseFloat(sellData.shipping_charges) || 0;
+        let discountAmount = 0;
+        let finalAmount = totalAmount;
+
+        if (type && value) {
+            if (type === 'amount') {
+                discountAmount = Math.min(parseFloat(value), totalAmount); // Can't discount more than total
+            } else if (type === 'percentage') {
+                const percentage = Math.min(parseFloat(value), 100); // Max 100%
+                discountAmount = (totalAmount * percentage) / 100;
+            }
+            finalAmount = totalAmount - discountAmount + shipping;
+        } else {
+            finalAmount = totalAmount + shipping;
+        }
+
+        setSellData({
+            ...sellData,
+            discount_type: type,
+            discount_value: value,
+            discount_amount: discountAmount,
+            final_amount: finalAmount.toString(),
+        });
+    };
+
     const handleSellSubmit = () => {
         setSellError('');
 
-        if (!sellData.date) {
-            setSellError('Date is required');
+        if (!sellData.order_date) {
+            setSellError('Order date is required');
             return;
         }
         if (!sellData.payment_method) {
@@ -173,8 +222,14 @@ export default function Index({ reservations, filters, locations = [] }) {
             quantity: soldQty,
             price_per_unit: sellData.price_per_unit ? parseFloat(sellData.price_per_unit) : null,
             total_amount: parseFloat(sellData.total_amount),
-            date: sellData.date,
+            discount_type: sellData.discount_type || null,
+            discount_value: sellData.discount_value ? parseFloat(sellData.discount_value) : null,
+            shipping_charges: sellData.shipping_charges ? parseFloat(sellData.shipping_charges) : 0,
+            order_date: sellData.order_date,
+            dispatch_date: sellData.dispatch_date || null,
+            delivered_date: sellData.delivered_date || null,
             payment_method: sellData.payment_method,
+            bank_name: sellData.bank_name || null,
             platform: sellData.platform,
             customer_name: selectedReservation.client_name,
             customer_phone: selectedReservation.client_phone,
@@ -448,102 +503,48 @@ export default function Index({ reservations, filters, locations = [] }) {
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photo</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Client</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Payment</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Status</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Date</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {reservations.map((reservation, index) => (
                                             <tr key={reservation.id} className="hover:bg-purple-50 transition-all duration-200 hover:shadow-md border-l-4 border-l-transparent hover:border-l-purple-500 animate-slideUp" style={{animationDelay: `${index * 50}ms`}}>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {reservation.image ? (
-                                                        <img className="h-12 w-12 rounded-lg object-cover" src={`/storage/${reservation.image}`} alt="Reservation" />
-                                                    ) : (
-                                                        <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center">
-                                                            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-4 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">{reservation.product_name || reservation.product?.name || 'Product'}</div>
                                                     <div className="text-xs text-gray-500">ID: {reservation.product?.id || 'N/A'}</div>
+                                                    {reservation.image && (
+                                                        <img className="h-8 w-8 rounded mt-1 object-cover" src={`/storage/${reservation.image}`} alt="Reservation" />
+                                                    )}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-4 py-4 whitespace-nowrap hidden md:table-cell">
                                                     <div className="text-sm font-medium text-gray-900">{reservation.client_name || reservation.client?.name || 'N/A'}</div>
                                                     <div className="text-xs text-gray-500">{reservation.client_phone || reservation.client?.phone || 'No phone'}</div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-                                                        {reservation.quantity} units
+                                                <td className="px-4 py-4 whitespace-nowrap">
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                                        {reservation.quantity}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-semibold text-gray-900">
-                                                        <span className="text-orange-600">Rs. {parseFloat(reservation.paid_amount || 0).toFixed(2)}</span>
+                                                <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                                                    <div className="text-xs">
+                                                        <span className="text-orange-600 font-semibold">Rs. {parseFloat(reservation.paid_amount || 0).toFixed(2)}</span>
                                                         <span className="text-gray-500 mx-1">/</span>
-                                                        <span className="text-green-600">Rs. {parseFloat(reservation.total_amount || 0).toFixed(2)}</span>
+                                                        <span className="text-green-600 font-semibold">Rs. {parseFloat(reservation.total_amount || 0).toFixed(2)}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {editingLocation === reservation.id ? (
-                                                        <div className="flex gap-2 items-center">
-                                                            <select
-                                                                value={locationValue}
-                                                                onChange={(e) => setLocationValue(e.target.value)}
-                                                                className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                                                                autoFocus
-                                                            >
-                                                                <option value="">Select location</option>
-                                                                {locations.map((loc) => (
-                                                                    <option key={loc} value={loc}>
-                                                                        {loc.charAt(0).toUpperCase() + loc.slice(1)}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                            <button
-                                                                onClick={() => saveLocation(reservation.id)}
-                                                                className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-2 rounded transition-colors"
-                                                            >
-                                                                ✓
-                                                            </button>
-                                                            <button
-                                                                onClick={cancelLocationEdit}
-                                                                className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1 px-2 rounded transition-colors"
-                                                            >
-                                                                ✕
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <span
-                                                            onClick={() => startLocationEdit(reservation)}
-                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all hover:shadow-md ${
-                                                                reservation.location === 'warehouse' ? 'bg-orange-100 text-orange-800' :
-                                                                reservation.location === 'shop' ? 'bg-green-100 text-green-800' :
-                                                                'bg-blue-100 text-blue-800'
-                                                            }`}>
-                                                            {reservation.location === 'warehouse' && '🏭 '}
-                                                            {reservation.location === 'shop' && '🏪 '}
-                                                            {reservation.location === 'other' && '📍 '}
-                                                            {reservation.location ? reservation.location.charAt(0).toUpperCase() + reservation.location.slice(1) : 'N/A'}
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                                                     {editingStatus === reservation.id ? (
-                                                        <div className="flex gap-2 items-center">
+                                                        <div className="flex gap-1 items-center">
                                                             <select
                                                                 value={statusValue}
                                                                 onChange={(e) => setStatusValue(e.target.value)}
-                                                                className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                                                className="text-xs px-1 py-0.5 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                                                                 autoFocus
                                                             >
                                                                 <option value="pending">Pending</option>
@@ -552,13 +553,13 @@ export default function Index({ reservations, filters, locations = [] }) {
                                                             </select>
                                                             <button
                                                                 onClick={() => saveStatus(reservation.id)}
-                                                                className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-2 rounded transition-colors"
+                                                                className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-0.5 px-1 rounded transition-colors"
                                                             >
                                                                 ✓
                                                             </button>
                                                             <button
                                                                 onClick={cancelStatusEdit}
-                                                                className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1 px-2 rounded transition-colors"
+                                                                className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-0.5 px-1 rounded transition-colors"
                                                             >
                                                                 ✕
                                                             </button>
@@ -566,64 +567,70 @@ export default function Index({ reservations, filters, locations = [] }) {
                                                     ) : (
                                                         <span
                                                             onClick={() => startStatusEdit(reservation)}
-                                                            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition-all hover:shadow-md ${getStatusBadgeColor(reservation.status)}`}
-                                                        >
+                                                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all hover:shadow-md ${
+                                                                reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                reservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                                                'bg-red-100 text-red-800'
+                                                            }`}>
+                                                            {reservation.status === 'pending' && '⏳ '}
+                                                            {reservation.status === 'confirmed' && '✓ '}
+                                                            {reservation.status === 'cancelled' && '✕ '}
                                                             {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
                                                         </span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-900">
-                                                        {reservation.date ? new Date(reservation.date + 'T00:00:00').toLocaleDateString() : 'N/A'}
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        {new Date(reservation.created_at).toLocaleTimeString()}
-                                                    </div>
+                                                <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell text-xs text-gray-600">
+                                                    {reservation.date ? new Date(reservation.date).toLocaleDateString() : 'No date'}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center space-x-2">
+                                                <td className="px-4 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
                                                         <button
                                                             onClick={() => {
                                                                 openSellModal(reservation);
                                                             }}
-                                                            className="text-green-600 hover:text-green-900 transition-colors"
+                                                            className="text-green-600 hover:text-green-900 transition-colors text-lg"
                                                             title="Mark as Sold"
                                                         >
                                                             ✅
                                                         </button>
                                                         <Link
                                                             href={`/reservations/${reservation.id}`}
-                                                            className="text-blue-600 hover:text-blue-900 transition-colors"
-                                                            title="View"
+                                                            className="text-blue-600 hover:text-blue-900 transition-colors text-lg"
+                                                            title="View Details"
                                                         >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                            </svg>
+                                                            👁️
                                                         </Link>
                                                         <Link
                                                             href={`/reservations/${reservation.id}/edit`}
-                                                            className="text-indigo-600 hover:text-indigo-900 transition-colors"
+                                                            className="text-yellow-600 hover:text-yellow-900 transition-colors text-lg"
                                                             title="Edit"
                                                         >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                            </svg>
+                                                            ✏️
                                                         </Link>
                                                         <button
                                                             onClick={() => {
                                                                 openDamagedModal(reservation);
                                                             }}
-                                                            className="text-orange-600 hover:text-orange-900 transition-colors"
-                                                            title="Damaged"
+                                                            className="text-orange-600 hover:text-orange-900 transition-colors text-lg"
+                                                            title="Mark Damaged"
                                                         >
                                                             ⚠️
                                                         </button>
                                                         <button
                                                             onClick={() => {
+                                                                setShowInvoiceModal(true);
+                                                                setSelectedReservation(reservation);
+                                                            }}
+                                                            className="text-purple-600 hover:text-purple-900 transition-colors text-lg"
+                                                            title="Create Invoice"
+                                                        >
+                                                            📄
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
                                                                 handleDelete(reservation.id);
                                                             }}
-                                                            className="text-red-600 hover:text-red-900 transition-colors"
+                                                            className="text-red-600 hover:text-red-900 transition-colors text-lg"
                                                             title="Delete"
                                                         >
                                                             🗑️
@@ -714,15 +721,41 @@ export default function Index({ reservations, filters, locations = [] }) {
 
                             {/* Sale Details Grid */}
                             <div className="space-y-3">
-                                {/* Date Field */}
+                                {/* Order Date Field */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Date <span className="text-red-500">*</span>
+                                        Order Date <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="date"
-                                        value={sellData.date}
-                                        onChange={(e) => setSellData({ ...sellData, date: e.target.value })}
+                                        value={sellData.order_date}
+                                        onChange={(e) => setSellData({ ...sellData, order_date: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                    />
+                                </div>
+
+                                {/* Dispatch Date Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Dispatch Date (optional)
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={sellData.dispatch_date}
+                                        onChange={(e) => setSellData({ ...sellData, dispatch_date: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                    />
+                                </div>
+
+                                {/* Delivered Date Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Delivered Date (optional)
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={sellData.delivered_date}
+                                        onChange={(e) => setSellData({ ...sellData, delivered_date: e.target.value })}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
                                     />
                                 </div>
@@ -734,7 +767,12 @@ export default function Index({ reservations, filters, locations = [] }) {
                                     </label>
                                     <select
                                         value={sellData.payment_method}
-                                        onChange={(e) => setSellData({ ...sellData, payment_method: e.target.value })}
+                                        onChange={(e) => {
+                                            setSellData({ ...sellData, payment_method: e.target.value });
+                                            if (e.target.value !== 'bank_transfer') {
+                                                setSellData(prev => ({ ...prev, bank_name: '' }));
+                                            }
+                                        }}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
                                     >
                                         <option value="">Select</option>
@@ -743,8 +781,47 @@ export default function Index({ reservations, filters, locations = [] }) {
                                         <option value="debit_card">Debit Card</option>
                                         <option value="bank_transfer">Bank Transfer</option>
                                         <option value="check">Check</option>
+                                        <option value="online_transfer">Online Transfer</option>
+                                        <option value="mobile_wallet">Mobile Wallet</option>
+                                        <option value="other">Other</option>
                                     </select>
                                 </div>
+
+                                {/* Bank Selection Field */}
+                                {sellData.payment_method === 'bank_transfer' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Select Bank
+                                        </label>
+                                        <select
+                                            value={sellData.bank_name}
+                                            onChange={(e) => setSellData({ ...sellData, bank_name: e.target.value })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                        >
+                                            <option value="">-- Choose a bank --</option>
+                                            <option value="HBL - Habib Bank Limited">HBL - Habib Bank Limited</option>
+                                            <option value="ABL - Allied Bank Limited">ABL - Allied Bank Limited</option>
+                                            <option value="UBL - United Bank Limited">UBL - United Bank Limited</option>
+                                            <option value="MCB - MCB Bank Limited">MCB - MCB Bank Limited</option>
+                                            <option value="NBP - National Bank of Pakistan">NBP - National Bank of Pakistan</option>
+                                            <option value="BOP - Bank of Punjab">BOP - Bank of Punjab</option>
+                                            <option value="Faysal Bank">Faysal Bank</option>
+                                            <option value="Askari Bank">Askari Bank</option>
+                                            <option value="SILK Bank">SILK Bank</option>
+                                            <option value="Jazz Bank">Jazz Bank</option>
+                                            <option value="Alfalah Bank">Alfalah Bank</option>
+                                            <option value="SBP - State Bank of Pakistan">SBP - State Bank of Pakistan</option>
+                                            <option value="Bank Al Falah">Bank Al Falah</option>
+                                            <option value="Habib Metropolitan Bank">Habib Metropolitan Bank</option>
+                                            <option value="KASB Bank">KASB Bank</option>
+                                            <option value="ICBC Bank">ICBC Bank</option>
+                                            <option value="Dubai Islamic Bank">Dubai Islamic Bank</option>
+                                            <option value="Meezan Bank">Meezan Bank</option>
+                                            <option value="Bank Islami Pakistan">Bank Islami Pakistan</option>
+                                            <option value="Other Banks">Other Banks</option>
+                                        </select>
+                                    </div>
+                                )}
 
                                 {/* Platform Field */}
                                 <div>
@@ -790,6 +867,106 @@ export default function Index({ reservations, filters, locations = [] }) {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Shipping Charges Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Shipping Charges (optional)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={sellData.shipping_charges}
+                                        onChange={(e) => {
+                                            const shipping = parseFloat(e.target.value) || 0;
+                                            const totalAmount = parseFloat(sellData.total_amount) || 0;
+                                            let newFinal = totalAmount + shipping;
+                                            if (sellData.discount_amount > 0) {
+                                                newFinal = totalAmount - sellData.discount_amount + shipping;
+                                            }
+                                            setSellData({ ...sellData, shipping_charges: shipping, final_amount: newFinal.toString() });
+                                        }}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+
+                                {/* Discount Type Field */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Discount Type (optional)
+                                    </label>
+                                    <select
+                                        value={sellData.discount_type}
+                                        onChange={(e) => {
+                                            if (e.target.value) {
+                                                handleDiscountChange(e.target.value, sellData.discount_value);
+                                            } else {
+                                                handleDiscountChange('', '');
+                                            }
+                                        }}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                    >
+                                        <option value="">No Discount</option>
+                                        <option value="amount">Fixed Amount (PKR)</option>
+                                        <option value="percentage">Percentage (%)</option>
+                                    </select>
+                                </div>
+
+                                {/* Discount Value Field */}
+                                {sellData.discount_type && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Discount Value {sellData.discount_type === 'percentage' ? '(%)' : '(PKR)'}
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={sellData.discount_value}
+                                            onChange={(e) => handleDiscountChange(sellData.discount_type, e.target.value)}
+                                            placeholder={sellData.discount_type === 'percentage' ? 'Enter percentage (0-100)' : 'Enter amount'}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-sm"
+                                            min="0"
+                                            step="0.01"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Discount Summary */}
+                                {sellData.discount_type && sellData.discount_value && (
+                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-2">
+                                        <div className="flex justify-between">
+                                            <span className="text-sm text-gray-600">Discount Amount:</span>
+                                            <span className="text-sm font-semibold text-green-900">- PKR {parseFloat(sellData.discount_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                        {parseFloat(sellData.shipping_charges) > 0 && (
+                                            <div className="flex justify-between">
+                                                <span className="text-sm text-gray-600">Shipping Charges:</span>
+                                                <span className="text-sm font-semibold text-green-900">+ PKR {parseFloat(sellData.shipping_charges).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between bg-green-100 px-2 py-1 rounded pt-2 border-t border-green-300">
+                                            <span className="text-sm font-semibold text-gray-700">Final Amount:</span>
+                                            <span className="text-sm font-bold text-green-900">PKR {parseFloat(sellData.final_amount || sellData.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                {!sellData.discount_type && parseFloat(sellData.shipping_charges) > 0 && (
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                                        <div className="flex justify-between">
+                                            <span className="text-sm text-gray-600">Total Amount:</span>
+                                            <span className="text-sm font-semibold text-blue-900">PKR {parseFloat(sellData.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-sm text-gray-600">Shipping Charges:</span>
+                                            <span className="text-sm font-semibold text-blue-900">+ PKR {parseFloat(sellData.shipping_charges).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div className="flex justify-between bg-blue-100 px-2 py-1 rounded pt-2 border-t border-blue-300">
+                                            <span className="text-sm font-semibold text-gray-700">Final Amount:</span>
+                                            <span className="text-sm font-bold text-blue-900">PKR {parseFloat(sellData.final_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

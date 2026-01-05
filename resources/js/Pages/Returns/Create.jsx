@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head, useForm, Link, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Create({ sales = [], clients = [] }) {
+    const { url } = usePage();
     const [selectedSale, setSelectedSale] = useState(null);
     const [showNewClient, setShowNewClient] = useState(false);
 
@@ -18,6 +19,29 @@ export default function Create({ sales = [], clients = [] }) {
         reason: '',
         image: null,
     });
+
+    // Get sale_id from URL query parameter on component mount
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const saleIdFromUrl = params.get('sale_id');
+        
+        if (saleIdFromUrl) {
+            const sale = sales.find(s => s.id.toString() === saleIdFromUrl);
+            if (sale) {
+                setData({
+                    ...data,
+                    sale_id: saleIdFromUrl,
+                    product_id: sale.product_id,
+                    product_name: sale.product?.name || '',
+                    client_id: sale.client_id || '',
+                    client_name: sale.customer_name || '',
+                    client_phone: sale.customer_phone || '',
+                    client_address: sale.customer_address || '',
+                });
+                setSelectedSale(sale);
+            }
+        }
+    }, []);
 
     const handleSaleChange = (e) => {
         const saleId = e.target.value;

@@ -26,6 +26,7 @@ class Invoice extends Model
         'discount',
         'tax',
         'payment_method',
+        'bank_name',
         'received_amount',
         'subtotal',
         'total_invoice',

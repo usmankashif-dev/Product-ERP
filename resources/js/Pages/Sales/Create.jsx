@@ -12,8 +12,16 @@ export default function Create({ products }) {
         quantity: 1,
         price_per_unit: '',
         total_amount: '',
-        date: new Date().toISOString().split('T')[0],
+        discount_type: '',
+        discount_value: '',
+        discount_amount: 0,
+        shipping_charges: 0,
+        final_amount: '',
+        order_date: new Date().toISOString().split('T')[0],
+        dispatch_date: '',
+        delivered_date: '',
         payment_method: 'cash',
+        bank_name: '',
         platform: '',
         customer_name: '',
         customer_phone: '',
@@ -35,7 +43,37 @@ export default function Create({ products }) {
         const qty = newQuantity !== null ? newQuantity : (parseFloat(data.quantity) || 0);
         const price = newPrice !== null ? newPrice : (parseFloat(data.price_per_unit) || 0);
         const total = (qty * price).toFixed(2);
+        const shipping = parseFloat(data.shipping_charges) || 0;
         setData('total_amount', total);
+        // Reset discount when total changes
+        setData('discount_type', '');
+        setData('discount_value', '');
+        setData('discount_amount', 0);
+        setData('final_amount', (parseFloat(total) + shipping).toString());
+    };
+
+    const handleDiscountChange = (type, value, totalAmount = null) => {
+        const amount = totalAmount !== null ? totalAmount : parseFloat(data.total_amount) || 0;
+        const shipping = parseFloat(data.shipping_charges) || 0;
+        let discountAmount = 0;
+        let finalAmount = amount;
+
+        if (type && value) {
+            if (type === 'amount') {
+                discountAmount = Math.min(parseFloat(value), amount);
+            } else if (type === 'percentage') {
+                const percentage = Math.min(parseFloat(value), 100);
+                discountAmount = (amount * percentage) / 100;
+            }
+            finalAmount = amount - discountAmount + shipping;
+        } else {
+            finalAmount = amount + shipping;
+        }
+
+        setData('discount_type', type);
+        setData('discount_value', value);
+        setData('discount_amount', discountAmount);
+        setData('final_amount', finalAmount.toString());
     };
 
     const handleProductChange = (e) => {
@@ -183,20 +221,136 @@ export default function Create({ products }) {
                                     {errors.total_amount && <div className="text-red-500">{errors.total_amount}</div>}
                                 </div>
                                 <div className="mb-4">
-                                    <label className="block text-gray-700">Date</label>
+                                    <label className="block text-gray-700">Shipping Charges (optional)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={data.shipping_charges}
+                                        onChange={(e) => {
+                                            const shipping = parseFloat(e.target.value) || 0;
+                                            setData('shipping_charges', shipping);
+                                            // Recalculate final amount with shipping
+                                            const currentTotal = parseFloat(data.total_amount) || 0;
+                                            let newFinal = currentTotal + shipping;
+                                            if (data.discount_amount > 0) {
+                                                newFinal = currentTotal - data.discount_amount + shipping;
+                                            }
+                                            setData('final_amount', newFinal.toString());
+                                        }}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                        placeholder="0.00"
+                                    />
+                                    {errors.shipping_charges && <div className="text-red-500">{errors.shipping_charges}</div>}
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Discount Type (optional)</label>
+                                    <select
+                                        value={data.discount_type}
+                                        onChange={(e) => {
+                                            if (e.target.value) {
+                                                handleDiscountChange(e.target.value, data.discount_value);
+                                            } else {
+                                                handleDiscountChange('', '');
+                                            }
+                                        }}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                    >
+                                        <option value="">No Discount</option>
+                                        <option value="amount">Fixed Amount (Rs.)</option>
+                                        <option value="percentage">Percentage (%)</option>
+                                    </select>
+                                    {errors.discount_type && <div className="text-red-500">{errors.discount_type}</div>}
+                                </div>
+                                {data.discount_type && (
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Discount Value {data.discount_type === 'percentage' ? '(%)' : '(Rs.)'}</label>
+                                        <input
+                                            type="number"
+                                            value={data.discount_value}
+                                            onChange={(e) => handleDiscountChange(data.discount_type, e.target.value)}
+                                            placeholder={data.discount_type === 'percentage' ? 'Enter percentage' : 'Enter amount'}
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                            min="0"
+                                            step="0.01"
+                                        />
+                                        {errors.discount_value && <div className="text-red-500">{errors.discount_value}</div>}
+                                        {data.discount_type && data.discount_value && (
+                                            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
+                                                <div className="flex justify-between mb-1">
+                                                    <span className="text-sm text-gray-600">Discount Amount:</span>
+                                                    <span className="text-sm font-semibold">Rs. {parseFloat(data.discount_amount).toFixed(2)}</span>
+                                                </div>
+                                                {parseFloat(data.shipping_charges) > 0 && (
+                                                    <div className="flex justify-between mb-1">
+                                                        <span className="text-sm text-gray-600">Shipping Charges:</span>
+                                                        <span className="text-sm font-semibold">Rs. {parseFloat(data.shipping_charges).toFixed(2)}</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex justify-between pt-1 border-t border-green-300">
+                                                    <span className="text-sm font-semibold text-gray-700">Final Amount:</span>
+                                                    <span className="text-sm font-bold text-green-900">Rs. {parseFloat(data.final_amount || data.total_amount).toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                {!data.discount_type && parseFloat(data.shipping_charges) > 0 && (
+                                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-sm text-gray-600">Total Amount:</span>
+                                            <span className="text-sm font-semibold">Rs. {parseFloat(data.total_amount).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-sm text-gray-600">Shipping Charges:</span>
+                                            <span className="text-sm font-semibold">Rs. {parseFloat(data.shipping_charges).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between pt-1 border-t border-blue-300">
+                                            <span className="text-sm font-semibold text-gray-700">Final Amount:</span>
+                                            <span className="text-sm font-bold text-blue-900">Rs. {parseFloat(data.final_amount).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Order Date</label>
                                     <input
                                         type="date"
-                                        value={data.date}
-                                        onChange={(e) => setData('date', e.target.value)}
+                                        value={data.order_date}
+                                        onChange={(e) => setData('order_date', e.target.value)}
                                         className="w-full border border-gray-300 rounded px-3 py-2"
                                     />
-                                    {errors.date && <div className="text-red-500">{errors.date}</div>}
+                                    {errors.order_date && <div className="text-red-500">{errors.order_date}</div>}
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Dispatch Date (optional)</label>
+                                    <input
+                                        type="date"
+                                        value={data.dispatch_date}
+                                        onChange={(e) => setData('dispatch_date', e.target.value)}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                    />
+                                    {errors.dispatch_date && <div className="text-red-500">{errors.dispatch_date}</div>}
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700">Delivered Date (optional)</label>
+                                    <input
+                                        type="date"
+                                        value={data.delivered_date}
+                                        onChange={(e) => setData('delivered_date', e.target.value)}
+                                        className="w-full border border-gray-300 rounded px-3 py-2"
+                                    />
+                                    {errors.delivered_date && <div className="text-red-500">{errors.delivered_date}</div>}
                                 </div>
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Payment Method</label>
                                     <select
                                         value={data.payment_method}
-                                        onChange={(e) => setData('payment_method', e.target.value)}
+                                        onChange={(e) => {
+                                            setData('payment_method', e.target.value);
+                                            if (e.target.value !== 'bank_transfer') {
+                                                setData('bank_name', '');
+                                            }
+                                        }}
                                         className="w-full border border-gray-300 rounded px-3 py-2"
                                     >
                                         <option value="cash">Cash</option>
@@ -204,9 +358,45 @@ export default function Create({ products }) {
                                         <option value="debit_card">Debit Card</option>
                                         <option value="bank_transfer">Bank Transfer</option>
                                         <option value="check">Check</option>
+                                        <option value="online_transfer">Online Transfer</option>
+                                        <option value="mobile_wallet">Mobile Wallet</option>
+                                        <option value="other">Other</option>
                                     </select>
                                     {errors.payment_method && <div className="text-red-500">{errors.payment_method}</div>}
                                 </div>
+                                {data.payment_method === 'bank_transfer' && (
+                                    <div className="mb-4">
+                                        <label className="block text-gray-700">Select Bank</label>
+                                        <select
+                                            value={data.bank_name}
+                                            onChange={(e) => setData('bank_name', e.target.value)}
+                                            className="w-full border border-gray-300 rounded px-3 py-2"
+                                        >
+                                            <option value="">-- Choose a bank --</option>
+                                            <option value="HBL - Habib Bank Limited">HBL - Habib Bank Limited</option>
+                                            <option value="ABL - Allied Bank Limited">ABL - Allied Bank Limited</option>
+                                            <option value="UBL - United Bank Limited">UBL - United Bank Limited</option>
+                                            <option value="MCB - MCB Bank Limited">MCB - MCB Bank Limited</option>
+                                            <option value="NBP - National Bank of Pakistan">NBP - National Bank of Pakistan</option>
+                                            <option value="BOP - Bank of Punjab">BOP - Bank of Punjab</option>
+                                            <option value="Faysal Bank">Faysal Bank</option>
+                                            <option value="Askari Bank">Askari Bank</option>
+                                            <option value="SILK Bank">SILK Bank</option>
+                                            <option value="Jazz Bank">Jazz Bank</option>
+                                            <option value="Alfalah Bank">Alfalah Bank</option>
+                                            <option value="SBP - State Bank of Pakistan">SBP - State Bank of Pakistan</option>
+                                            <option value="Bank Al Falah">Bank Al Falah</option>
+                                            <option value="Habib Metropolitan Bank">Habib Metropolitan Bank</option>
+                                            <option value="KASB Bank">KASB Bank</option>
+                                            <option value="ICBC Bank">ICBC Bank</option>
+                                            <option value="Dubai Islamic Bank">Dubai Islamic Bank</option>
+                                            <option value="Meezan Bank">Meezan Bank</option>
+                                            <option value="Bank Islami Pakistan">Bank Islami Pakistan</option>
+                                            <option value="Other Banks">Other Banks</option>
+                                        </select>
+                                        {errors.bank_name && <div className="text-red-500">{errors.bank_name}</div>}
+                                    </div>
+                                )}
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Platform (optional)</label>
                                     <div className="space-y-2">
