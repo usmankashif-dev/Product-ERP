@@ -11,7 +11,7 @@ class SalesHistoryController extends Controller
     {
         // Fetch all sales with their related product data, ordered by most recent first
         $sales = Sale::with('product')
-            ->orderBy('date', 'desc')
+            ->orderBy('order_date', 'desc')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($sale) {
@@ -29,7 +29,7 @@ class SalesHistoryController extends Controller
                     'quantity' => $sale->quantity,
                     'price_per_unit' => $sale->price_per_unit,
                     'total_amount' => $sale->total_amount,
-                    'date' => $sale->date,
+                    'order_date' => $sale->order_date,
                     'payment_method' => $sale->payment_method,
                     'platform' => $sale->platform,
                     'created_at' => $sale->created_at,

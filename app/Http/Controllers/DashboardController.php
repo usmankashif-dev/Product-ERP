@@ -20,14 +20,14 @@ class DashboardController extends Controller
         $startOfWeek = $now->clone()->startOfWeek();
 
         // Get sales metrics
-        $totalYearSales = Sale::whereBetween('date', [$startOfYear, $now])->sum('total_amount');
-        $totalMonthSales = Sale::whereBetween('date', [$startOfMonth, $now])->sum('total_amount');
-        $totalWeekSales = Sale::whereBetween('date', [$startOfWeek, $now])->sum('total_amount');
+        $totalYearSales = Sale::whereBetween('order_date', [$startOfYear, $now])->sum('total_amount');
+        $totalMonthSales = Sale::whereBetween('order_date', [$startOfMonth, $now])->sum('total_amount');
+        $totalWeekSales = Sale::whereBetween('order_date', [$startOfWeek, $now])->sum('total_amount');
 
         // Get quantity metrics
-        $totalYearQuantity = Sale::whereBetween('date', [$startOfYear, $now])->sum('quantity');
-        $totalMonthQuantity = Sale::whereBetween('date', [$startOfMonth, $now])->sum('quantity');
-        $totalWeekQuantity = Sale::whereBetween('date', [$startOfWeek, $now])->sum('quantity');
+        $totalYearQuantity = Sale::whereBetween('order_date', [$startOfYear, $now])->sum('quantity');
+        $totalMonthQuantity = Sale::whereBetween('order_date', [$startOfMonth, $now])->sum('quantity');
+        $totalWeekQuantity = Sale::whereBetween('order_date', [$startOfWeek, $now])->sum('quantity');
 
         // Get sales by product
         $productSales = Sale::select('product_id', DB::raw('SUM(quantity) as total_quantity'), DB::raw('SUM(total_amount) as total_revenue'))
@@ -38,10 +38,10 @@ class DashboardController extends Controller
             ->get();
 
         // Get daily sales data for the month (for chart)
-        $dailySalesData = Sale::select(DB::raw('DATE(date) as date'), DB::raw('SUM(total_amount) as amount'), DB::raw('SUM(quantity) as quantity'))
-            ->whereBetween('date', [$startOfMonth, $now])
-            ->groupBy(DB::raw('DATE(date)'))
-            ->orderBy('date')
+        $dailySalesData = Sale::select(DB::raw('DATE(order_date) as date'), DB::raw('SUM(total_amount) as amount'), DB::raw('SUM(quantity) as quantity'))
+            ->whereBetween('order_date', [$startOfMonth, $now])
+            ->groupBy(DB::raw('DATE(order_date)'))
+            ->orderBy('order_date')
             ->get();
 
         // Format for chart

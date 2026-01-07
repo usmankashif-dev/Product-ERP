@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function SalesHistory({ sales }) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState('date');
+    const [sortBy, setSortBy] = useState('order_date');
     const [sortOrder, setSortOrder] = useState('desc');
 
     // Filter and sort sales
@@ -15,7 +15,7 @@ export default function SalesHistory({ sales }) {
                 sale.product?.name?.toLowerCase().includes(searchLower) ||
                 sale.product?.size?.toLowerCase().includes(searchLower) ||
                 sale.product?.color?.toLowerCase().includes(searchLower) ||
-                sale.date?.includes(searchTerm)
+                sale.order_date?.includes(searchTerm)
             );
         })
         .sort((a, b) => {
