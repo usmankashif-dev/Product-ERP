@@ -9,6 +9,7 @@ export default function Index({ products, filters, locations: initialLocations =
         location: filters.location || '',
     });
 
+    const [expandedProducts, setExpandedProducts] = useState({});
     const [editingLocation, setEditingLocation] = useState(null);
     const [locationValue, setLocationValue] = useState('');
     const [showNewLocation, setShowNewLocation] = useState(false);
@@ -99,6 +100,13 @@ export default function Index({ products, filters, locations: initialLocations =
     const cancelLocationEdit = () => {
         setEditingLocation(null);
         setLocationValue('');
+    };
+
+    const toggleExpandProduct = (productId) => {
+        setExpandedProducts(prev => ({
+            ...prev,
+            [productId]: !prev[productId]
+        }));
     };
 
     const getAvailableQuantity = (productId) => {
@@ -494,26 +502,38 @@ export default function Index({ products, filters, locations: initialLocations =
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {products.map((product, index) => (
-                                        <tr key={product.id} className="hover:bg-blue-50 transition-all duration-200 hover:shadow-md border-l-4 border-l-transparent hover:border-l-blue-500 animate-slideUp" style={{animationDelay: `${index * 50}ms`}}>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <div className="flex-shrink-0 h-12 w-12">
-                                                        {product.image ? (
-                                                            <img className="h-12 w-12 rounded-lg object-cover" src={`/storage/${product.image}`} alt={product.name} />
-                                                        ) : (
-                                                            <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center">
-                                                                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        <React.Fragment key={product.id}>
+                                            <tr className="hover:bg-blue-50 transition-all duration-200 hover:shadow-md border-l-4 border-l-transparent hover:border-l-blue-500 animate-slideUp" style={{animationDelay: `${index * 50}ms`}}>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center space-x-3">
+                                                        {product.variations && product.variations.length > 0 && (
+                                                            <button
+                                                                onClick={() => toggleExpandProduct(product.id)}
+                                                                className="text-blue-600 hover:text-blue-900 transition-colors"
+                                                                title={expandedProducts[product.id] ? "Collapse" : "Expand"}
+                                                            >
+                                                                <svg className={`w-5 h-5 transition-transform ${expandedProducts[product.id] ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                                                 </svg>
-                                                            </div>
+                                                            </button>
                                                         )}
+                                                        <div className="flex-shrink-0 h-12 w-12">
+                                                            {product.image ? (
+                                                                <img className="h-12 w-12 rounded-lg object-cover" src={`/storage/${product.image}`} alt={product.name} />
+                                                            ) : (
+                                                                <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center">
+                                                                    <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                                                    </svg>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="ml-2">
+                                                            <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                                                            <div className="text-sm text-gray-500">${product.price || 'N/A'}</div>
+                                                        </div>
                                                     </div>
-                                                    <div className="ml-4">
-                                                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                                                        <div className="text-sm text-gray-500">${product.price || 'N/A'}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
+                                                </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">
                                                     <div className="flex items-center space-x-2">
@@ -667,6 +687,105 @@ export default function Index({ products, filters, locations: initialLocations =
                                                 </div>
                                             </td>
                                         </tr>
+                                        {expandedProducts[product.id] && product.variations && product.variations.length > 0 && (
+                                            product.variations.map((variation, varIndex) => (
+                                                <tr key={`variation-${variation.id}`} className="bg-gray-50 hover:bg-blue-50 transition-all duration-200 border-l-4 border-l-blue-300 animate-slideUp" style={{animationDelay: `${(index + varIndex + 1) * 50}ms`}}>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center space-x-3 ml-6">
+                                                            <div className="flex-shrink-0 h-10 w-10">
+                                                                {variation.image ? (
+                                                                    <img className="h-10 w-10 rounded-lg object-cover" src={`/storage/${variation.image}`} alt={variation.name} />
+                                                                ) : (
+                                                                    <div className="h-10 w-10 rounded-lg bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center">
+                                                                        <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                                                        </svg>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-sm font-medium text-gray-700">↳ {variation.name}</div>
+                                                                <div className="text-xs text-gray-500">${variation.price || 'N/A'}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-900">
+                                                            <div className="flex items-center space-x-2">
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                                    Color: {variation.color}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                            variation.location === 'warehouse' ? 'bg-orange-100 text-orange-800' :
+                                                            variation.location === 'shop' ? 'bg-green-100 text-green-800' :
+                                                            'bg-gray-100 text-gray-800'
+                                                        }`}>
+                                                            {variation.location === 'warehouse' && '🏭 '}
+                                                            {variation.location === 'shop' && '🏪 '}
+                                                            {variation.location === 'other' && '📍 '}
+                                                            {variation.location.charAt(0).toUpperCase() + variation.location.slice(1)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        {variation.date ? new Date(variation.date).toLocaleDateString() : '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center">
+                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                                variation.quantity > 10 ? 'bg-green-100 text-green-800' :
+                                                                variation.quantity > 0 ? 'bg-yellow-100 text-yellow-800' :
+                                                                'bg-red-100 text-red-800'
+                                                            }`}>
+                                                                {variation.quantity > 10 && '✅ '}
+                                                                {variation.quantity > 0 && variation.quantity <= 10 && '⚠️ '}
+                                                                {variation.quantity === 0 && '❌ '}
+                                                                {variation.quantity} units
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                        <div className="flex items-center space-x-2">
+                                                            <Link href={`/products/${variation.id}`} className="text-blue-600 hover:text-blue-900 transition-colors" title="View">
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                </svg>
+                                                            </Link>
+                                                            <Link href={`/products/${variation.id}/edit`} className="text-indigo-600 hover:text-indigo-900 transition-colors" title="Edit">
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                </svg>
+                                                            </Link>
+                                                            <button
+                                                                onClick={() => {
+                                                                    openDamagedModal(variation);
+                                                                }}
+                                                                className="text-orange-600 hover:text-orange-900 transition-colors"
+                                                                title="Damaged"
+                                                            >
+                                                                ⚠️
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (window.confirm('Are you sure you want to delete this variation?')) {
+                                                                        router.delete(`/products/${variation.id}`);
+                                                                    }
+                                                                }}
+                                                                className="text-red-600 hover:text-red-900 transition-colors"
+                                                                title="Delete"
+                                                            >
+                                                                🗑️
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </React.Fragment>
                                     ))}
                                 </tbody>
                             </table>

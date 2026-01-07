@@ -31,7 +31,8 @@ class ProductController extends Controller
         // Only get main products (not variations)
         $query->whereNull('parent_product_id');
         
-        $products = $query->get();
+        // Load variations with each product
+        $products = $query->with('variations')->get();
         
         $locations = Product::distinct()->pluck('location')->filter()->values()->toArray();
         // Reservations are just for information, not for reducing product quantity

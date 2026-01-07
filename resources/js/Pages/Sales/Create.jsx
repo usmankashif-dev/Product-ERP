@@ -84,7 +84,16 @@ export default function Create({ products }) {
         const selectedProduct = products.find(p => p.id == productId);
         if (selectedProduct && selectedProduct.price) {
             setData('price_per_unit', selectedProduct.price.toString());
-            updateTotal();
+            // Calculate total with default quantity (1) and selected product price
+            const quantity = parseFloat(data.quantity) || 1;
+            const price = parseFloat(selectedProduct.price) || 0;
+            const total = (quantity * price).toFixed(2);
+            const shipping = parseFloat(data.shipping_charges) || 0;
+            setData('total_amount', total);
+            setData('discount_type', '');
+            setData('discount_value', '');
+            setData('discount_amount', 0);
+            setData('final_amount', (parseFloat(total) + shipping).toString());
         }
     };
 
@@ -275,40 +284,6 @@ export default function Create({ products }) {
                                             step="0.01"
                                         />
                                         {errors.discount_value && <div className="text-red-500">{errors.discount_value}</div>}
-                                        {data.discount_type && data.discount_value && (
-                                            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded">
-                                                <div className="flex justify-between mb-1">
-                                                    <span className="text-sm text-gray-600">Discount Amount:</span>
-                                                    <span className="text-sm font-semibold">Rs. {parseFloat(data.discount_amount).toFixed(2)}</span>
-                                                </div>
-                                                {parseFloat(data.shipping_charges) > 0 && (
-                                                    <div className="flex justify-between mb-1">
-                                                        <span className="text-sm text-gray-600">Shipping Charges:</span>
-                                                        <span className="text-sm font-semibold">Rs. {parseFloat(data.shipping_charges).toFixed(2)}</span>
-                                                    </div>
-                                                )}
-                                                <div className="flex justify-between pt-1 border-t border-green-300">
-                                                    <span className="text-sm font-semibold text-gray-700">Final Amount:</span>
-                                                    <span className="text-sm font-bold text-green-900">Rs. {parseFloat(data.final_amount || data.total_amount).toFixed(2)}</span>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                {!data.discount_type && parseFloat(data.shipping_charges) > 0 && (
-                                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                                        <div className="flex justify-between mb-1">
-                                            <span className="text-sm text-gray-600">Total Amount:</span>
-                                            <span className="text-sm font-semibold">Rs. {parseFloat(data.total_amount).toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between mb-1">
-                                            <span className="text-sm text-gray-600">Shipping Charges:</span>
-                                            <span className="text-sm font-semibold">Rs. {parseFloat(data.shipping_charges).toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between pt-1 border-t border-blue-300">
-                                            <span className="text-sm font-semibold text-gray-700">Final Amount:</span>
-                                            <span className="text-sm font-bold text-blue-900">Rs. {parseFloat(data.final_amount).toFixed(2)}</span>
-                                        </div>
                                     </div>
                                 )}
                                 <div className="mb-4">
@@ -463,6 +438,34 @@ export default function Create({ products }) {
                                     </div>
                                     {errors.platform && <div className="text-red-500">{errors.platform}</div>}
                                 </div>
+                                
+                                {/* Summary Section */}
+                                <div className="mb-6 p-4 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-lg">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Order Summary</h3>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600">Total Amount:</span>
+                                            <span className="text-lg font-semibold text-gray-900">Rs. {parseFloat(data.total_amount || 0).toFixed(2)}</span>
+                                        </div>
+                                        {parseFloat(data.discount_amount) > 0 && (
+                                            <div className="flex justify-between items-center text-orange-600">
+                                                <span className="text-gray-600">Discount:</span>
+                                                <span className="text-lg font-semibold">- Rs. {parseFloat(data.discount_amount).toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        {parseFloat(data.shipping_charges) > 0 && (
+                                            <div className="flex justify-between items-center text-blue-600">
+                                                <span className="text-gray-600">Shipping Charges:</span>
+                                                <span className="text-lg font-semibold">+ Rs. {parseFloat(data.shipping_charges).toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        <div className="pt-3 border-t border-gray-300 flex justify-between items-center">
+                                            <span className="text-gray-700 font-semibold">Final Amount:</span>
+                                            <span className="text-2xl font-bold text-green-600">Rs. {parseFloat(data.final_amount || data.total_amount || 0).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm">Create Sale</button>
                             </form>
                         </div>
