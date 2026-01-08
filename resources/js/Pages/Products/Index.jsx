@@ -530,7 +530,7 @@ export default function Index({ products, filters, locations: initialLocations =
                                                         </div>
                                                         <div className="ml-2">
                                                             <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                                                            <div className="text-sm text-gray-500">${product.price || 'N/A'}</div>
+                                                            <div className="text-sm text-gray-500">Rs. {product.price || 'N/A'}</div>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -705,7 +705,7 @@ export default function Index({ products, filters, locations: initialLocations =
                                                             </div>
                                                             <div>
                                                                 <div className="text-sm font-medium text-gray-700">↳ {variation.name}</div>
-                                                                <div className="text-xs text-gray-500">${variation.price || 'N/A'}</div>
+                                                                <div className="text-xs text-gray-500">Rs. {variation.price || 'N/A'}</div>
                                                             </div>
                                                         </div>
                                                     </td>
